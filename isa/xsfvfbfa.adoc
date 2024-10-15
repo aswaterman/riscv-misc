@@ -1,0 +1,88 @@
+== SiFive custom additional BF16 vector compute support *Xsfvfbfa*, Version 0.1
+
+The Xsfvfbfa extension adds more complete BF16 vector compute support.
+
+The Xsfvfbfa extension requires the Zve32f and Zfbfmin extensions.
+
+NOTE: Xsfvfbfa is compatible with, but does not require, Zvfbfwma and
+Zvfbfmin.
+
+Xsfvfbfa adds a 1-bit field, `altfmt`, to the `vtype` CSR in bit position 8.
+Attempting to set `altfmt`=1 and SEW >= 32 is reserved.
+
+NOTE: The recommended assembly syntax to set `altfmt`=1 is to append the token
+`alt` to the SEW setting, e.g. `vsetvli a0, a1, e16alt, m1, ta, ma`.
+
+NOTE: SiFive implementations set `vill` in `vtype` when a reserved combination
+of `altfmt` and SEW is selected.
+
+When `altfmt`=0, the hart behaves as though Xsfvfbfa were not implemented.
+
+When `altfmt`=1 and SEW=8, all vector floating-point instructions become
+reserved, except for the following, which are redefined to use the BF16
+format for any operand that would otherwise have used the FP16 format:
+
+- `vfwcvt.f.x[u].v`
+- `vfncvt.x[u].f.w`
+- `vfncvt.rtz.x[u].f.w`
+
+When `altfmt`=1 and SEW=16, all vector floating-point instructions become
+reserved, except for the following, which are redefined to use the BF16
+format for any operand that would otherwise have used the FP16 format:
+
+- `vfadd.v[vf]`
+- `vfsub.v[vf]`
+- `vfmin.v[vf]`
+- `vfmax.v[vf]`
+- `vfsgnj.v[vf]` ††
+- `vfsgnjn.v[vf]` ††
+- `vfsgnjx.v[vf]` ††
+- `vfslide1up.vf` ††
+- `vfslide1down.vf` ††
+- `vfmv.v.f` ††
+- `vfmerge.vfm` ††
+- `vmfeq.v[vf]`
+- `vmfle.v[vf]`
+- `vmflt.v[vf]`
+- `vmfne.v[vf]`
+- `vmfgt.vf`
+- `vmfge.vf`
+- `vfmul.v[vf]`
+- `vfrsub.vf`
+- `vfmadd.v[vf]`
+- `vfnmadd.v[vf]`
+- `vfmsub.v[vf]`
+- `vfnmsub.v[vf]`
+- `vfmacc.v[vf]`
+- `vfnmacc.v[vf]`
+- `vfmsac.v[vf]`
+- `vfnmsac.v[vf]`
+- `vfwadd.v[vf]`
+- `vfwsub.v[vf]`
+- `vfwadd.w[vf]`
+- `vfwsub.w[vf]`
+- `vfwmul.v[vf]`
+- `vfwmacc.v[vf]` (same semantics as `vfwmaccbf16.v[vf]`)
+- `vfwnmacc.v[vf]`
+- `vfwmsac.v[vf]`
+- `vfwnmsac.v[vf]`
+- `vfmv.s.f` ††
+- `vfmv.f.s` †
+- `vfwcvt.f.f.v` (same semantics as `vfwcvtbf16.f.f.v`/`sf.vfwcvt.f.bf16.v`)
+- `vfncvt.f.f.w` (same semantics as `vfncvtbf16.f.f.w`/`sf.vfncvt.bf16.f.w`)
+- `vfncvt.rod.f.f.w`
+- `vfrsqrt7.v`
+- `vfrec7.v`
+- `vfclass.v`
+- `vfwmaccbf16.v[vf]` †
+- `vfwcvtbf16.f.f.v`/`sf.vfwcvt.f.bf16.v` †
+- `vfncvtbf16.f.f.w`/`sf.vfncvt.bf16.f.w` †
+
+The instructions marked with † have the same semantics regardless of `altfmt`.
+The instructions marked with †† differ only in that improperly NaN-boxed
+`f`-register operands must substitute the BF16 canonical NaN instead of the
+FP16 canonical NaN.
+
+NOTE: The excluded operations are division, square root, reductions, and
+conversions to/from integers wider than 8 bits.
+These operations can be performed by converting to and from FP32.
