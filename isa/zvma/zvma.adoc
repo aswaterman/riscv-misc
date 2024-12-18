@@ -25,7 +25,7 @@ instruction.
 
 The new computational instructions perform the operation C[M,N] += A[K,M]^T*B[K,N],
 where C is stored in the tile state.
-Each of the input matrices A^T and B is held in a set of vector registers,
+Each of the input matrices A and B is held in a set of vector registers,
 where each row of the matrix is held in a separate vector register group and
 the number of rows is given by K.
 The inner dimension K can be a maximum (KMAX) of 1, 2, or 4, depending on the
