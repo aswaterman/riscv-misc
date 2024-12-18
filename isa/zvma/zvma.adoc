@@ -1,4 +1,8 @@
-= Zvma Family of Attached Matrix Extensions, v0.1
+= Zvma Family of Attached Matrix Extensions
+Warning! This document describes an Attached Matrix Extensions proposal from SiFive. It is not an RVIA standard.
+:doctype: book
+:revnumber: v0.1
+:revdate: 2024/12/18
 :toc: left
 :toclevels: 5
 :sectnums:
