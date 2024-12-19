@@ -115,7 +115,7 @@ divided to form two TEW=64 tiles (e.g. `mt0` for TEW=32 forms `mt0`
 and `mt2` for TEW=64).
 
 Additional ISA extensions describe the tile dimensions.
-The Zvma__N__t extension indicates `TE {ge} __N__`, e.g.
+The Zvma__N__t extension indicates `TE` {ge} `__N__`, e.g.
 Zvma32t indicates TE is at least 32.
 
 NOTE: The accumulator array dimensions (TE) may be determined dynamically with
