@@ -86,3 +86,7 @@ FP16 canonical NaN.
 NOTE: The excluded operations are division, square root, reductions, and
 conversions to/from integers wider than 8 bits.
 These operations can be performed by converting to and from FP32.
+
+For `vfrec7.v`, some inputs greater than 2^126^ produce subnormal results that
+cannot be exactly represented in BF16's limited precision.
+These results are rounded towards zero.
