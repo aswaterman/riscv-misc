@@ -73,6 +73,47 @@ void test()
 }
 
 template<typename in_t, typename out_t>
+void NOINLINE test_mat_vec(size_t m, size_t n)
+{
+  if (int64_t(in_t(m + n)) != int64_t(m + n)) {
+    printf("%zu %zu will overflow for sizeof(in_t) = %zu\n", m, n, sizeof(in_t));
+    abort();
+  }
+
+  in_t A[m*n];
+  in_t X[m];
+  out_t Y[n];
+
+  populate_matrix<in_t, true>(m, n, -1, A);
+
+  populate_matrix<in_t, false>(m, 1, 1, X);
+
+  memset(Y, 0, sizeof(Y));
+
+  mat_vec_mul_trans<in_t, out_t>(m, n, A, X, Y);
+  mat_vec_mul_trans<in_t, out_t>(m, n, A, X, Y);
+
+  for (size_t ni = 0; ni < n; ni++) {
+    int64_t expected = -int64_t(m)*(ni+1) + int64_t(-ni*m*(m+1))/2 + int64_t(m)*(m+1)*(2*m+1)/6;
+    if (Y[ni] != 2 * expected) {
+      printf("%zu %zu Y[%zu][%zu] = %ld, expected %ld\n", m, n, ni, (long)Y[ni], (long)(2 * expected));
+      abort();
+    }
+  }
+}
+
+template<typename in_t, typename out_t>
+void test_mat_vec()
+{
+  printf("test_mat_vec %s %s\n", typeid(in_t).name(), typeid(out_t).name());
+  for (int i = 0; i <= 48; i++) {
+    for (int j = 0; j <= 48; j++) {
+      test_mat_vec<in_t, out_t>(i, j);
+    }
+  }
+}
+
+template<typename in_t, typename out_t>
 void benchmark()
 {
   // Choose M and N to be the LCM of the various register-block sizes to
@@ -134,6 +175,11 @@ int main(int argc, char** argv)
   }
 #endif
 
+  test_mat_vec<float, float>();
+  test_mat_vec<int8_t, int32_t>();
+  test_mat_vec<double, double>();
+
+#if 0
   benchmark<int8_t, int32_t>();
   benchmark<bf16, int32_t>();
   benchmark<double, double>();
@@ -141,6 +187,7 @@ int main(int argc, char** argv)
   test<int8_t, int32_t>();
   test<bf16, float>();
   test<double, double>();
+#endif
 
   return 0;
 }

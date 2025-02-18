@@ -39,6 +39,11 @@ public:
   }
 
   template<typename T, int vreg>
+  void splat(T value) {
+    asm volatile ("vmv.v.x v%0, %1" :: "I" (vreg), "r" (value) : "memory");
+  }
+
+  template<typename T, int vreg>
   void store(T* data) {
     asm volatile ("vse%0.v v%1, (%2)" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
   }
@@ -57,6 +62,80 @@ public:
     constexpr_for<0, max_n, 1U>([&](auto i) {
       if (i < n) store<T, vreg + i*lmul>(&B[i*ldb]);
     });
+  }
+
+  template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg>
+  void fma() {
+    bool in_float = (in_t)0 != (in_t)0.1;
+    bool in_unsigned_int = !in_float && (in_t)0 < (in_t)-1;
+    bool in_signed_int = !in_float && !in_unsigned_int;
+
+    if (in_float && sizeof(out_t) == sizeof(in_t)) {
+      asm volatile ("vfmacc.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (in_float && sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vfwmacc.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (sizeof(out_t) == sizeof(in_t)) {
+      asm volatile ("vmacc.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (in_signed_int && sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vwmacc.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vwmaccu.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else {
+      abort();
+    }
+  }
+
+  template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg>
+  void mul() {
+    bool in_float = (in_t)0 != (in_t)0.1;
+    bool in_unsigned_int = !in_float && (in_t)0 < (in_t)-1;
+    bool in_signed_int = !in_float && !in_unsigned_int;
+
+    if (in_float && sizeof(out_t) == sizeof(in_t)) {
+      asm volatile ("vfmul.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (in_float && sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vfwmul.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (sizeof(out_t) == sizeof(in_t)) {
+      asm volatile ("vmul.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (in_signed_int && sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vwmul.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else if (sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vwmulu.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg));
+    } else {
+      abort();
+    }
+  }
+
+  template<typename in_t, typename out_t, int a_reg, int c_reg>
+  void acc() {
+    bool in_float = (in_t)0 != (in_t)0.1;
+    bool in_unsigned_int = !in_float && (in_t)0 < (in_t)-1;
+    bool in_signed_int = !in_float && !in_unsigned_int;
+
+    if (in_float && sizeof(out_t) == sizeof(in_t)) {
+      asm volatile ("vfadd.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (c_reg), "I" (a_reg));
+    } else if (in_float && sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vfwadd.wv v%0, v%1, v%2" :: "I" (c_reg), "I" (c_reg), "I" (a_reg));
+    } else if (sizeof(out_t) == sizeof(in_t)) {
+      asm volatile ("vadd.vv v%0, v%1, v%2" :: "I" (c_reg), "I" (c_reg), "I" (a_reg));
+    } else if (in_signed_int && sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vwadd.wv v%0, v%1, v%2" :: "I" (c_reg), "I" (c_reg), "I" (a_reg));
+    } else if (sizeof(out_t) == 2 * sizeof(in_t)) {
+      asm volatile ("vwaddu.wv v%0, v%1, v%2" :: "I" (c_reg), "I" (c_reg), "I" (a_reg));
+    } else {
+      abort();
+    }
+  }
+
+  template<typename T, int a_reg, int c_reg>
+  void redsum() {
+    bool in_float = (T)0 != (T)0.1;
+
+    if (in_float) {
+      asm volatile ("vfredusum.vs v%0, v%1, v%0" :: "I" (c_reg), "I" (a_reg));
+    } else {
+      asm volatile ("vredsum.vs v%0, v%1, v%0" :: "I" (c_reg), "I" (a_reg));
+    }
   }
 
   template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg, int c_off, bool masked>

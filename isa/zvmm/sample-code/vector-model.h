@@ -74,6 +74,14 @@ public:
   }
 
   template<typename T, int vreg>
+  void splat(T value) {
+    for (size_t i = 0; i < vl; i++)
+      elt<T>(vreg, i) = value;
+
+    if (vl) moves += mem_count(0, vl * sizeof(T));
+  }
+
+  template<typename T, int vreg>
   void store(T* data) {
     assert(sizeof(T) * 8 == sew);
     for (size_t i = 0; i < vl; i++)
@@ -95,6 +103,30 @@ public:
     constexpr_for<0, max_n, 1U>([&](auto i) {
       if (i < n) store<T, vreg + i*lmul>(&B[i*ldb]);
     });
+  }
+
+  template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg>
+  void fma() {
+    for (size_t i = 0; i < vl; i++)
+      elt<out_t>(c_reg, i) += (out_t)elt<in_t>(a_reg, i) * (out_t)elt<in_t>(b_reg, i);
+  }
+
+  template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg>
+  void mul() {
+    for (size_t i = 0; i < vl; i++)
+      elt<out_t>(c_reg, i) = (out_t)elt<in_t>(a_reg, i) * (out_t)elt<in_t>(b_reg, i);
+  }
+
+  template<typename in_t, typename out_t, int a_reg, int c_reg>
+  void acc() {
+    for (size_t i = 0; i < vl; i++)
+      elt<out_t>(c_reg, i) += (out_t)elt<in_t>(a_reg, i);
+  }
+
+  template<typename T, int a_reg, int c_reg>
+  void redsum() {
+    for (size_t i = 0; i < vl; i++)
+      elt<T>(c_reg, 0) += elt<T>(a_reg, i);
   }
 
   template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg, int c_off, bool masked>
