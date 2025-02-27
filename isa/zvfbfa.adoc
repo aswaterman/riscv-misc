@@ -155,4 +155,4 @@ A new instruction, `vfncvt.sat.f.f.w`, implements this operation.
 It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
 performing the same function as `vfncvt.f.f.w` except for the saturation
 property.
-It is encoded like `vfncvt.f.f.w`, but with `vs1`=11100.
+It is encoded like `vfncvt.f.f.w`, but with `vs1`=11101.
