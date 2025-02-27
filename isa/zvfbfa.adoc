@@ -154,6 +154,10 @@ performing the same function as `vfncvt.f.f.w` except for the saturation
 property.
 It is encoded like `vfncvt.f.f.w`, but with `vs1`=11101.
 
+NOTE: Conversion from 8-bit integer to OFP8 is accomplished by first converting
+to BF16 using instructions in the Zvfbfa extension, then using the instructions
+defined in this section.
+
 === FP32 to OFP8 conversion instructions
 
 A new instruction to convert from FP32 to the OFP8 formats, `vfncvt.f.f.q`, is
@@ -182,3 +186,7 @@ rounding to odd, then use the instructions defined in the previous section to
 convert to OFP8.
 However, FP32 to OFP8 conversion is common enough to justify the direct
 conversion.
+
+NOTE: Conversion from FP16 and 16-bit integer formats is accomplished by first
+converting to FP32 using instructions in the Zvfhmin and Zve32f extensions,
+then using the instructions defined in this section.
