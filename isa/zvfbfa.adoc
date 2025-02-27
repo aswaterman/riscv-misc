@@ -116,6 +116,10 @@ are used almost exclusively in highly data-parallel computations.
 The existing `vfwcvt.f.f.v` instruction is used to convert from the OFP8 formats to BF16.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of OFP8 E4M3 values in
 `vs2` to a vector of BF16 values, writing the result to `vd`.
+These instructions do not set any floating-point exception flags.
+Results are rounded using the dynamic rounding mode in the `frm` register, and
+exceptions are reported in the `fflags` register as with other floating-point
+conversions.
 When SEW=8 and `altfmt`=1, the instruction treats `vs2` as a vector of OFP8 E5M2 values
 instead.
 
@@ -124,3 +128,21 @@ then using existing instructions in the Zvfbfmin, Zvfbfa, and Zve32f extensions.
 Conversion from OFP8 directly to FP32 is not a common operation, as OFP8 values are
 typically used as multiplicands.
 The multiplication operation can itself widen the result if needed.
+
+=== BF16 to OFP8 conversion instructions
+
+The existing `vfncvt.f.f.w` instruction is used to convert from BF16 to the OFP8 formats.
+When SEW=8 and `altfmt`=0, this instruction converts a vector of BF16 values in
+`vs2` to a vector of OFP8 E4M3 values, writing the result to `vd`.
+Results are rounded using the dynamic rounding mode in the `frm` register, and
+exceptions are reported in the `fflags` register as with other floating-point
+conversions.
+When SEW=8 and `altfmt`=1, the instruction converts to OFP8 E5M2 instead.
+
+The OFP8 standard additionally defines saturating conversions, in which out-of-range
+or infinite input values are converted to the maximum finite value of the same sign,
+rather than infinity.
+A new instruction, `vfncvt.sat.f.f.w`, implements this operation.
+It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
+performing the same function as `vfncvt.f.f.w` except for the saturation property.
+It is encoded like `vfncvt.f.f.w`, but with `vs1`=11100.
