@@ -162,7 +162,8 @@ It is encoded like `vfncvt.f.f.w`, but with `vs1`=11101.
 A new instruction to convert from FP32 to the OFP8 formats, `vfncvt.f.f.q`, is
 added.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of FP32 values in
-`vs2` to a vector of OFP8 E4M3 values, writing the result to `vd`.
+`vs2` (with EMUL=4×LMUL) to a vector of OFP8 E4M3 values, writing the result to
+`vd` (with EMUL=LMUL).
 Conversions that would overflow produce the canonical NaN, since E4M3 cannot
 represent infinity.
 Results are rounded using the dynamic rounding mode in the `frm` register, and
