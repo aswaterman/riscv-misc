@@ -120,9 +120,6 @@ formats to BF16.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of OFP8 E4M3
 values in `vs2` to a vector of BF16 values, writing the result to `vd`.
 These instructions do not set any floating-point exception flags.
-Results are rounded using the dynamic rounding mode in the `frm` register, and
-exceptions are reported in the `fflags` register as with other floating-point
-conversions.
 When SEW=8 and `altfmt`=1, the instruction treats `vs2` as a vector of OFP8
 E5M2 values instead.
 
