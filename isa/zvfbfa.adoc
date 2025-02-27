@@ -90,3 +90,12 @@ These operations can be performed by converting to and from FP32.
 For `vfrec7.v`, some inputs greater than 2^126^ produce subnormal results that
 cannot be exactly represented in BF16's limited precision.
 These results are rounded towards zero.
+
+
+
+== OCP MX FP8 conversion extension *Zvfmx8min*, Version 0.1
+
+The Zvfmx8min extension provides basic support for the two 8-bit
+floating-point formats defined in the
+https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf[OpenCompute Project Microscaling Formats specification],
+MXFP8 E5M2 and MXFP8 E4M3.
