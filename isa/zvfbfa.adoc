@@ -124,8 +124,8 @@ formats to BF16.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of OFP8 E4M3
 values in `vs2` to a vector of BF16 values, writing the result to `vd`.
 No rounding occurs, and no floating-point exception flags are set.
-When SEW=8 and `altfmt`=1, the instruction treats `vs2` as a vector of OFP8
-E5M2 values instead, but behaves identically otherwise.
+When SEW=8 and `altfmt`=1, the instruction instead treats `vs2` as a vector of
+OFP8 E5M2 values, but behaves identically otherwise.
 
 NOTE: Conversion to FP32, FP16, and integer formats is accomplished by first
 converting to BF16, then using existing instructions in the Zvfbfmin, Zvfbfa,
