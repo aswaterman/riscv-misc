@@ -149,7 +149,7 @@ represent infinity.
 When SEW=8 and `altfmt`=1, the instruction converts to OFP8 E5M2 instead.
 In this case, however, conversions that overflow produce an infinity of the
 same sign as the input.
-For both instructions, results are rounded using the dynamic rounding mode in
+In both cases, results are rounded using the dynamic rounding mode in
 the `frm` register, and floating-point exceptions are reported in the `fflags`
 register as for other floating-point conversions.
 
@@ -175,19 +175,19 @@ When SEW=8 and `altfmt`=0, this instruction converts a vector of FP32 values in
 `vd` (with EMUL=LMUL).
 Conversions that would overflow produce the canonical NaN, since E4M3 cannot
 represent infinity.
-Results are rounded using the dynamic rounding mode in the `frm` register, and
-exceptions are reported in the `fflags` register as with other floating-point
-conversions.
 When SEW=8 and `altfmt`=1, the instruction converts to OFP8 E5M2 instead.
 In this case, however, conversions that overflow produce an infinity of the
 same sign as the input.
-It is encoded like `vfncvt.f.f.w`, but with `vs1`=11110.
+In both cases, results are rounded using the dynamic rounding mode in
+the `frm` register, and floating-point exceptions are reported in the `fflags`
+register as for other floating-point conversions.
+`vfncvt.f.f.q` is encoded like `vfncvt.f.f.w`, but with `vs1`=11110.
 
 Another new instruction, `vfncvt.sat.f.f.q`, is defined for SEW=8 and
 `altfmt`=0, and for SEW=8 and `altfmt`=1, performing the same function as the
 `vfncvt.f.f.q` instruction, but saturating in the same manner as the
 `vfncvt.sat.f.f.w` instruction.
-It is encoded like `vfncvt.f.f.w`, but with `vs1`=11111.
+`vfncvt.sat.f.f.q` is encoded like `vfncvt.f.f.w`, but with `vs1`=11111.
 
 NOTE: An alternative design would have been to first convert from FP32 to BF16,
 rounding to odd, then use the instructions defined in the previous section to
