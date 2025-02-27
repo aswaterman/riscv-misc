@@ -153,9 +153,9 @@ In both cases, results are rounded using the dynamic rounding mode in
 the `frm` register, and floating-point exceptions are reported in the `fflags`
 register as for other floating-point conversions.
 
-The OFP8 standard additionally defines saturating conversions, in which any
-conversion that would have produced an infinite result instead produces the
-maximum-magnitude finite value of the same sign.
+The OFP8 standard additionally defines saturating conversions, in which
+infinite inputs and overflows result in the maximum-magnitude finite value of
+the same sign.
 A new instruction, `vfncvt.sat.f.f.w`, implements this operation.
 It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
 performing the same function as `vfncvt.f.f.w` except for the saturation
