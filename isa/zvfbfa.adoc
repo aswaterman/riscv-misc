@@ -111,7 +111,7 @@ microscaling if the need becomes quantitatively demonstrable.
 NOTE: Only vector support for the OFP8 formats is currently proposed, as these
 formats are used almost exclusively in highly data-parallel computations.
 
-The E4M3 canonical NaN is `0x7f`, and the E5M2 canonical NaN is `0x7e`.
+The canonical NaN for both E4M3 and E5M2 is `0x7f`.
 
 === OFP8 to BF16 conversion instructions
 
