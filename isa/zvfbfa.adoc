@@ -123,9 +123,9 @@ The existing `vfwcvt.f.f.v` instruction is used to convert from the OFP8
 formats to BF16.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of OFP8 E4M3
 values in `vs2` to a vector of BF16 values, writing the result to `vd`.
-These instructions do not set any floating-point exception flags.
+No rounding occurs, and no floating-point exception flags are set.
 When SEW=8 and `altfmt`=1, the instruction treats `vs2` as a vector of OFP8
-E5M2 values instead.
+E5M2 values instead, but behaves identically otherwise.
 
 NOTE: Conversion to FP32, FP16, and integer formats is accomplished by first
 converting to BF16, then using existing instructions in the Zvfbfmin, Zvfbfa,
@@ -146,16 +146,16 @@ When SEW=8 and `altfmt`=0, this instruction converts a vector of BF16 values in
 `vs2` to a vector of OFP8 E4M3 values, writing the result to `vd`.
 Conversions that would overflow produce the canonical NaN, since E4M3 cannot
 represent infinity.
-Results are rounded using the dynamic rounding mode in the `frm` register, and
-exceptions are reported in the `fflags` register as with other floating-point
-conversions.
 When SEW=8 and `altfmt`=1, the instruction converts to OFP8 E5M2 instead.
 In this case, however, conversions that overflow produce an infinity of the
 same sign as the input.
+For both instructions, results are rounded using the dynamic rounding mode in
+the `frm` register, and floating-point exceptions are reported in the `fflags`
+register as for other floating-point conversions.
 
 The OFP8 standard additionally defines saturating conversions, in which any
 conversion that would have produced an infinite result instead produces the
-maximum-magnitude finite value of the same size.
+maximum-magnitude finite value of the same sign.
 A new instruction, `vfncvt.sat.f.f.w`, implements this operation.
 It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
 performing the same function as `vfncvt.f.f.w` except for the saturation
