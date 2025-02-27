@@ -98,7 +98,7 @@ These results are rounded towards zero.
 The Zvfofp8min extension provides basic support for the two 8-bit
 floating-point formats defined in the
 https://www.opencompute.org/documents/ocp-8-bit-floating-point-specification-ofp8-revision-1-0-2023-12-01-pdf-1[Open Compute Project OFP8 specification],
-OFP8 E5M2 and OFP8 E4M3.
+OFP8 E4M3 and OFP8 E5M2.
 
 NOTE: This extension serves as a building block to support the
 https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf[OCP
@@ -110,6 +110,8 @@ the need becomes quantitatively demonstrable.
 
 NOTE: Only vector support for the OFP8 formats is currently proposed, as these formats
 are used almost exclusively in highly data-parallel computations.
+
+The E4M3 canonical NaN is `0x7f`, and the E5M2 canonical NaN is `0x7e`.
 
 === OFP8 to BF16 conversion instructions
 
