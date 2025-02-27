@@ -125,8 +125,9 @@ conversions.
 When SEW=8 and `altfmt`=1, the instruction treats `vs2` as a vector of OFP8 E5M2 values
 instead.
 
-NOTE: Conversion to FP32 and integer formats is accomplished by first converting to BF16,
-then using existing instructions in the Zvfbfmin, Zvfbfa, and Zve32f extensions.
+NOTE: Conversion to FP32, FP16, and integer formats is accomplished by first
+converting to BF16, then using existing instructions in the Zvfbfmin, Zvfbfa,
+Zvfhmin, and Zve32f extensions.
 Conversion from OFP8 directly to FP32 is not a common operation, as OFP8 values are
 typically used as multiplicands.
 The multiplication operation can itself widen the result if needed.
@@ -136,14 +137,18 @@ The multiplication operation can itself widen the result if needed.
 The existing `vfncvt.f.f.w` instruction is used to convert from BF16 to the OFP8 formats.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of BF16 values in
 `vs2` to a vector of OFP8 E4M3 values, writing the result to `vd`.
+Conversions that would overflow produce the canonical NaN, since E4M3 cannot
+represent infinity.
 Results are rounded using the dynamic rounding mode in the `frm` register, and
 exceptions are reported in the `fflags` register as with other floating-point
 conversions.
 When SEW=8 and `altfmt`=1, the instruction converts to OFP8 E5M2 instead.
+In this case, however, conversions that overflow produce an infinity of the same sign
+as the input.
 
-The OFP8 standard additionally defines saturating conversions, in which out-of-range
-or infinite input values are converted to the maximum finite value of the same sign,
-rather than infinity.
+The OFP8 standard additionally defines saturating conversions, in which any
+conversion that would have produced an infinite result instead produces the
+maximum-magnitude finite value of the same size.
 A new instruction, `vfncvt.sat.f.f.w`, implements this operation.
 It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
 performing the same function as `vfncvt.f.f.w` except for the saturation property.
