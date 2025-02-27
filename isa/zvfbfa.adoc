@@ -100,9 +100,13 @@ floating-point formats defined in the
 https://www.opencompute.org/documents/ocp-8-bit-floating-point-specification-ofp8-revision-1-0-2023-12-01-pdf-1[Open Compute Project OFP8 specification],
 OFP8 E4M3 and OFP8 E5M2.
 
-NOTE: This extension serves as a building block to support the
+NOTE: In some applications, the OFP8 formats are used to directly represent
+numerical values.
+In other applications, they are used as components of a block floating-point
+format, such as the one described in the
 https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf[OCP
-Microscaling] scheme.
+Microscaling specification].
+The conversion instructions defined in this extension support both use cases.
 Software can convert OFP8 values to BF16 or FP32, then apply the scaling factor
 in the higher-precision format, using, for example, a `vfmul.vf` instruction.
 Future vector or matrix extensions might provide direct support for
