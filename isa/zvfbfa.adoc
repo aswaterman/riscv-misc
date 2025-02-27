@@ -134,6 +134,10 @@ Conversion from OFP8 directly to FP32 is not a common operation, as OFP8 values
 are typically used as multiplicands.
 The multiplication operation can itself widen the result if needed.
 
+NOTE: Conversion between the two OFP8 formats is an uncommon operation, but it
+can be accomplished by first converting to BF16, then using one of the
+instructions defined in the following section.
+
 === BF16 to OFP8 conversion instructions
 
 The existing `vfncvt.f.f.w` instruction is used to convert from BF16 to the
