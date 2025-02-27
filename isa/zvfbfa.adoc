@@ -93,9 +93,34 @@ These results are rounded towards zero.
 
 
 
-== OCP MX FP8 conversion extension *Zvfmx8min*, Version 0.1
+== OFP8 conversion extension *Zvfofp8min*, Version 0.1
 
-The Zvfmx8min extension provides basic support for the two 8-bit
+The Zvfofp8min extension provides basic support for the two 8-bit
 floating-point formats defined in the
-https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf[OpenCompute Project Microscaling Formats specification],
-MXFP8 E5M2 and MXFP8 E4M3.
+https://www.opencompute.org/documents/ocp-8-bit-floating-point-specification-ofp8-revision-1-0-2023-12-01-pdf-1[Open Compute Project OFP8 specification],
+OFP8 E5M2 and OFP8 E4M3.
+
+NOTE: This extension serves as a building block to support the
+https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf[OCP
+Microscaling] scheme.
+Software can convert OFP8 values to BF16 or FP32, then apply the scaling factor
+in the higher-precision format, using, for example, a `vfmul.vf` instruction.
+Future vector or matrix extensions might provide direct support for microscaling if
+the need becomes quantitatively demonstrable.
+
+NOTE: Only vector support for the OFP8 formats is currently proposed, as these formats
+are used almost exclusively in highly data-parallel computations.
+
+=== OFP8 to BF16 conversion instructions
+
+The existing `vfwcvt.f.f.v` instruction is used to convert from the OFP8 formats to BF16.
+When SEW=8 and `altfmt`=0, this instruction converts a vector of OFP8 E4M3 values in
+`vs2` to a vector of BF16 values, writing the result to `vd`.
+When SEW=8 and `altfmt`=1, the instruction treats `vs2` as a vector of OFP8 E5M2 values
+instead.
+
+NOTE: Conversion to FP32 and integer formats is accomplished by first converting to BF16,
+then using existing instructions in the Zvfbfmin, Zvfbfa, and Zve32f extensions.
+Conversion from OFP8 directly to FP32 is not a common operation, as OFP8 values are
+typically used as multiplicands.
+The multiplication operation can itself widen the result if needed.
