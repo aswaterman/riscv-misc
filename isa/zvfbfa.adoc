@@ -93,7 +93,7 @@ These results are rounded towards zero.
 
 
 
-== OFP8 conversion extension *Zvfofp8min*, Version 0.1
+== OFP8 conversion extension *Zvfofp8min*, Version 0.2
 
 The Zvfofp8min extension provides basic support for the two 8-bit
 floating-point formats defined in the
@@ -119,7 +119,7 @@ The canonical NaN for both E4M3 and E5M2 is `0x7f`.
 
 === OFP8 to BF16 conversion instructions
 
-The existing `vfwcvt.f.f.v` instruction is used to convert from the OFP8
+The existing `vfwcvtbf16.f.f.v` instruction is used to convert from the OFP8
 formats to BF16.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of OFP8 E4M3
 values in `vs2` to a vector of BF16 values, writing the result to `vd`.
@@ -140,7 +140,7 @@ instructions defined in the following section.
 
 === BF16 to OFP8 conversion instructions
 
-The existing `vfncvt.f.f.w` instruction is used to convert from BF16 to the
+The existing `vfncvtbf16.f.f.w` instruction is used to convert from BF16 to the
 OFP8 formats.
 When SEW=8 and `altfmt`=0, this instruction converts a vector of BF16 values in
 `vs2` to a vector of OFP8 E4M3 values, writing the result to `vd`.
@@ -155,11 +155,11 @@ register as for other floating-point conversions.
 The OFP8 standard additionally defines saturating conversions, in which
 infinite results are converted to the maximum-magnitude finite value of the
 same sign.
-A new instruction, `vfncvt.sat.f.f.w`, implements this operation.
+A new instruction, `vfncvtbf16.sat.f.f.w`, implements this operation.
 It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
-performing the same function as `vfncvt.f.f.w` except for the saturation
+performing the same function as `vfncvtbf16.f.f.w` except for the saturation
 property.
-It is encoded like `vfncvt.f.f.w`, but with `vs1`=11101.
+It is encoded like `vfncvtbf16.f.f.w`, but with `vs1`=11101.
 
 NOTE: Conversion from 8-bit integer to OFP8 is accomplished by first converting
 to BF16 using instructions in the Zvfbfa extension, then using the instructions
