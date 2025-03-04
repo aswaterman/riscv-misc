@@ -23,7 +23,7 @@ Let `T` be the running total of bytes fetched, initially `M` - `N`.
 `T`, then execute that instruction, discard the remaining `T` - `L` bytes
 fetched, and go back to step 1, using the updated `pc`.
 
-. Otherwise, atomically fetch M bytes from memory at address `pc` + `T`,
+. Otherwise, atomically fetch `M` bytes from memory at address `pc` + `T`,
 increment `T` by `M`, and go back to step 2.
 
 [NOTE]
@@ -63,10 +63,11 @@ The Ziccid extension provides a means to describe systems whose
 instruction and data memory systems are coherent.
 When the Ziccid extension is implemented, instruction fetches appear as load
 operations in the global memory order.
-Furthermore, an instruction fetch from memory with the cacheability and
-coherence PMAs must return a value that a load from the same address would
-have returned, provided sufficient permissions.
-Finally, while instruction fetches may still be performed early and
+An instruction fetch from memory with the cacheability and coherence PMAs must
+return a value that a load from the same address would have returned, provided
+sufficient permissions.
+
+While instruction fetches may still be performed early and
 speculatively, they must not be performed earlier than the most recent FENCE.I
 instruction, and they must not be succeeded in the global memory order by an
 infinite sequence of other memory operations.
