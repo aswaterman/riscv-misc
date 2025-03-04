@@ -93,7 +93,7 @@ These results are rounded towards zero.
 
 
 
-== OFP8 conversion extension *Zvfofp8min*, Version 0.2
+== OFP8 conversion extension *Zvfofp8min*, Version 0.2.1
 
 The Zvfofp8min extension provides basic support for the two 8-bit
 floating-point formats defined in the
@@ -159,7 +159,7 @@ A new instruction, `vfncvtbf16.sat.f.f.w`, implements this operation.
 It is defined for SEW=8 and `altfmt`=0, and for SEW=8 and `altfmt`=1,
 performing the same function as `vfncvtbf16.f.f.w` except for the saturation
 property.
-It is encoded like `vfncvtbf16.f.f.w`, but with `vs1`=11101.
+It is encoded like `vfncvtbf16.f.f.w`, but with `vs1`=11111.
 
 NOTE: Conversion from 8-bit integer to OFP8 is accomplished by first converting
 to BF16 using instructions in the Zvfbfa extension, then using the instructions
@@ -179,13 +179,13 @@ In this case, however, infinite results are representable.
 In both cases, results are rounded using the dynamic rounding mode in
 the `frm` register, and floating-point exceptions are reported in the `fflags`
 register as for other floating-point conversions.
-`vfncvt.f.f.q` is encoded like `vfncvt.f.f.w`, but with `vs1`=11110.
+`vfncvt.f.f.q` is encoded like `vfncvt.f.f.w`, but with `vs1`=11001.
 
 Another new instruction, `vfncvt.sat.f.f.q`, is defined for SEW=8 and
 `altfmt`=0, and for SEW=8 and `altfmt`=1, performing the same function as the
 `vfncvt.f.f.q` instruction, but saturating in the same manner as the
 `vfncvt.sat.f.f.w` instruction.
-`vfncvt.sat.f.f.q` is encoded like `vfncvt.f.f.w`, but with `vs1`=11111.
+`vfncvt.sat.f.f.q` is encoded like `vfncvt.f.f.w`, but with `vs1`=11011.
 
 NOTE: An alternative design would have been to first convert from FP32 to BF16,
 rounding to odd, then use the instructions defined in the previous section to
