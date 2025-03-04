@@ -62,7 +62,7 @@ a safe harbor.
 The Ziccid extension provides a means to describe systems whose
 instruction and data memory systems are coherent.
 When the Ziccid extension is implemented, instruction fetches appear as load
-operations in the global memory order.
+operations in the global memory order, in program order.
 An instruction fetch from memory with the cacheability and coherence PMAs must
 return a value that a load from the same address would have returned, provided
 sufficient permissions.
