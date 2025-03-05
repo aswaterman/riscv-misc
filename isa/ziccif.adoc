@@ -84,9 +84,9 @@ infinite sequence of other memory operations.
 
 NOTE: This definition guarantees that stores _eventually_ become visible to
 instruction fetches.
-To make a store visible to instruction fetch in program order, the receiving
-hart must execute a FENCE.I instruction after the store becomes visible, as is
-the case when the Ziccid extension is not implemented.
+To make a store visible to instruction fetch in program order, the hart must
+execute a FENCE.I instruction after the store becomes visible, as is the case
+when the Ziccid extension is not implemented.
 
 The Ziccid extension depends on the Ziccif extension.
 
