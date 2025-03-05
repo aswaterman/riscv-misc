@@ -57,7 +57,7 @@ a safe harbor.
 ====
 
 
-== Ziccid Extension for Instruction/Data Coherence, Version 1.0
+== Ziccid Extension for Instruction/Data Coherence, Version 0.1
 
 The Ziccid extension provides a means to describe systems whose
 instruction and data memory systems are coherent.
