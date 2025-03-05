@@ -61,11 +61,17 @@ a safe harbor.
 
 The Ziccid extension provides a means to describe systems whose
 instruction and data memory systems are coherent.
-When the Ziccid extension is implemented, instruction fetches appear as load
-operations in the global memory order, in program order with respect to each
-other.
+When the Ziccid extension is implemented, instruction fetches appear in the
+global memory order, in program order with respect to each other.
 
 NOTE: This in-order fetch property is expected by some JIT compilers.
+Straightforward microarchitectures provide this property naturally.
+An example of a technique that might violate this property is an instruction
+buffer that is populated out of program order, e.g. while fetching down the
+predicted path following an instruction-cache miss.
+Example solutions include only buffering instructions in program order, or
+keeping the buffer coherent by making the coherent instruction cache inclusive
+of the buffer.
 
 An instruction fetch from memory with the cacheability and coherence PMAs must
 return a value that a load from the same address would have returned, provided
@@ -78,9 +84,9 @@ infinite sequence of other memory operations.
 
 NOTE: This definition guarantees that stores _eventually_ become visible to
 instruction fetches.
-To make a store visible to instruction fetch _immediately_, the receiving hart
-must execute a FENCE.I instruction after the store becomes visible, as is the
-case when the Ziccid extension is not implemented.
+To make a store visible to instruction fetch in program order, the receiving
+hart must execute a FENCE.I instruction after the store becomes visible, as is
+the case when the Ziccid extension is not implemented.
 
 The Ziccid extension depends on the Ziccif extension.
 
