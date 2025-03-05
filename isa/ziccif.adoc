@@ -54,8 +54,11 @@ smaller instructions.
 
 Other well-defined code-modification strategies exist, but these rules provide
 a safe harbor.
-====
 
+Note that the software modifying the code need not know the value of `M`.
+Because ILEN must be at least the width of the instruction being modified,
+a lower bound on `M` can be inferred from the instruction's width and XLEN.
+====
 
 == Ziccid Extension for Instruction/Data Coherence, Version 0.1
 
@@ -84,9 +87,11 @@ infinite sequence of other memory operations.
 
 NOTE: This definition guarantees that stores _eventually_ become visible to
 instruction fetches.
-To make a store visible to instruction fetch in program order, the hart must
-execute a FENCE.I instruction after the store becomes visible, as is the case
-when the Ziccid extension is not implemented.
+As is the case without the Ziccid extension, a store from the current hart can
+be made visible to the hart's instruction fetches in program order by
+executing a FENCE.I instruction, or to a remote hart's instruction fetches by
+executing a FENCE then requesting (e.g. via IPI) that the remote hart execute
+a FENCE.I.
 
 The Ziccid extension depends on the Ziccif extension.
 
