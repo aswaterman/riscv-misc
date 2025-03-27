@@ -8,8 +8,8 @@ and adds expository material.
 
 If the Ziccif extension is implemented, main memory regions with both the
 cacheability and coherence PMAs must support instruction fetch, and any
-instruction fetches of naturally aligned power-of-2 sizes up to
-`min(ILEN,XLEN)` are atomic.
+instruction fetches of naturally aligned power-of-2 sizes of at most
+`min(ILEN,XLEN)` bits are atomic.
 
 An implementation with the Ziccif extension fetches instructions in a manner
 equivalent to the following state machine.
