@@ -1,3 +1,7 @@
+:le: &#8804;
+:ge: &#8805;
+:ne: &#8800;
+
 == Additional BF16 vector compute support extension *Zvfbfa*, Version 0.1
 
 The Zvfbfa extension adds more complete BF16 vector compute support.
@@ -198,3 +202,29 @@ conversion.
 NOTE: Conversion from FP16 and 16-bit integer formats is accomplished by first
 converting to FP32 using instructions in the Zvfhmin and Zve32f extensions,
 then using the instructions defined in this section.
+
+== OFP4 conversion extension *Zvfofp4min*, Version 0.1
+
+The Zvfofp4min extension introduces one new instruction, `vfext.vf2`, which is
+defined only for SEW=8, `altfmt`=0, and LMUL {ge} 1/4.
+This instruction converts a vector of OFP4 values in `vs2` (with EEW=4 and
+EMUL=LMUL/2) to a vector of OFP8 values in `vd` (with EEW=8 and EMUL=LMUL).
+No rounding occurs, and no floating-point exception flags are set.
+`vfext.vf2` is encoded in the VXUNARY0 encoding space with `vs1`=10110.
+
+NOTE: Other floating-point widening conversions have their source EEW equal to
+SEW and their destination EEW equal to 2×SEW.
+To follow that pattern for conversions from 4-bit types would require `vsew`
+to be able to represent SEW=4, which it currently cannot.
+Rather than introducing additional SEW encodings and addressing the
+definitional challenges of SEW being smaller than one byte, we instead
+followed the Vector Integer Extension pattern, in which SEW equals the
+destination EEW.
+
+The `vfext.vf2` instruction does not access the `fcsr`, and it is _not_
+considered a floating-point instruction for the purposes of the floating-point
+context status (FS) settings.
+
+NOTE: This approach simplifies illegal-instruction exception logic, since this
+instruction encoded in a minor opcode otherwise only used by integer
+instructions.
