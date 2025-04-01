@@ -208,9 +208,15 @@ then using the instructions defined in this section.
 The Zvfofp4min extension introduces one new instruction, `vfext.vf2`, which is
 defined only for SEW=8, `altfmt`=0, and LMUL {ge} 1/4.
 This instruction converts a vector of OFP4 values in `vs2` (with EEW=4 and
-EMUL=LMUL/2) to a vector of OFP8 values in `vd` (with EEW=8 and EMUL=LMUL).
+EMUL=LMUL/2) to a vector of OFP8 E4M3 values in `vd` (with EEW=8 and EMUL=LMUL).
 No rounding occurs, and no floating-point exception flags are set.
 `vfext.vf2` is encoded in the VXUNARY0 encoding space with `vs1`=10110.
+
+NOTE: It is expected that conversion to only one of the two OFP8 formats is
+sufficient, since most commonly the OFP8 result will be consumed by an
+operator that supports both OFP8 formats.
+Between the two formats, E4M3 is the logical choice because, unlike E5M2, it
+is also capable of exactly representing all values in both OFP6 formats.
 
 NOTE: Other floating-point widening conversions have their source EEW equal to
 SEW and their destination EEW equal to 2×SEW.
