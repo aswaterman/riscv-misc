@@ -1,28 +1,50 @@
 :le: &#8804;
 :ge: &#8805;
-:project-name: Zvmm
+:reddot-version: 0.1
 
-= `{project-name}` Family of Integrated Matrix Extensions, Version 0.1
+= `Zvreddot` Family of Dot-Product Extensions, Version {reddot-version}
 
-This document describes several extensions that support matrix multiplication
-within the existing vector-register state.
-The shape of these multiplications is in all cases 1xVLx8, i.e., they are
-matrix-vector multiplications.
+This document describes several extensions that accelerate the computation
+of Euclidean inner products, a.k.a. dot products.
+The extensions fall into two classes: dot products between two vectors,
+producing a scalar result; and _batched_ dot products, wherein one vector is
+broadcast to eight vectors to perform eight dot produts, producing a vector of
+eight results.
+Both formats support a variety of formats, including widening accumulations.
 
-NOTE: While outer products are efficient when substantial accumulator state is
-added, the matrix-vector formulation has several advantages for performing
-matrix multiplication within the vector registers.
-It scales naturally with vector length while supporting the natural memory
-layout, enabling efficient use of unit-stride loads and stores when A and
-C are row-major and B is column-major.
-The register operand pattern is a better fit for existing vector register file
-datapaths, even moreso when the vector registers are renamed.
-The high-fan-in dot products allow for a greater degree of energy savings when
-using bulk-normalization schemes.
-Finally, the matrix-vector formulation can speed up certain cases of
-application-level matrix-vector multiplication, in particular when the matrix
-is column-major and skinny.
+== `Zvreddot32a8i` 8-bit Integer Dot-Product Extension, Version {reddot-version}
 
+The Zvreddot32a8i extension adds two instructions, each of which performs a dot
+product between two 8-bit integer vectors, accumulating into a 32-bit scalar.
+The `vqmreddotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
+integers, whereas the `vqmreddots.vv` instruction treats the `vs2` operand
+as signed 8-bit integers.
+The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
+with 0 indicating unsigned and 1 indicating signed.
+These instructions are reserved unless SEW=8.
+The `vs1` and `vs2` operands have EEW=SEW and EMUL=LMUL.
+The `vd` operand has EEW=4*SEW and EMUL=1.
+The instructions are maskable.
+
+Unlike other reductions, these instructions are reserved if the
+destination overlaps any source, including the mask register.
+
+----
+# Zvreddot32a8i 8-bit integer dot product instructions
+# signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
+vqmreddotu.vv vd, vs2, vs1, vm   # vd += unsigned(vs2) dot vs1
+vqmreddots.vv vd, vs2, rs1, vm   # vd += signed(vs2) dot vs1
+----
+
+The instructions multiply each active element in `vs2` by the corresponding
+element in `vs1`, then sum all of the products in 32-bit integer arithmetic,
+add the sum to element 0 of `vd`, and write the result to element 0 of `vd`.
+
+== (Additional dot product instructions go here)
+
+== Batched Dot Products
+
+Batched dot product instructions perform up to eight dot products at a time.
 Each instruction in these extensions multiplies one row of A, held in a single
 vector register `vs1`, by eight columns of B, held in an EMUL=8 register group `vs2`,
 accumulating into one row of C, held in an EMUL=`ceil(8*EEW/VLEN)` register
@@ -30,7 +52,7 @@ group `vd`.
 The vector-length register `vl` controls how many elements of A are multiplied,
 avoiding the need for special-case fringe code in the K dimension.
 
-image::zvmm-simple.svg[Static, pdfwidth=4in, title="{project-name} operation, VLEN &#8804; 8*EEW"]
+image::zvmm-simple.svg[Static, pdfwidth=4in, title="Zvreddot operation, VLEN &#8804; 8*EEW"]
 
 For long-vector implementations with VLEN > 8*EEW, using a vector register to
 hold only eight elements of C would be inefficient, and so each instruction
@@ -38,7 +60,7 @@ also has a 3-bit scaled-by-8 immediate `ci` indicating which eight elements of
 `vd` destination vector are read and written.
 The instruction is reserved if `ci` {ge} VLMAX.
 
-image::zvmm-ci.svg[Static, pdfwidth=7in, title="{project-name} operation, VLEN > 8*EEW"]
+image::zvmm-ci.svg[Static, pdfwidth=7in, title="Zvreddot operation, VLEN > 8*EEW"]
 
 Each instruction is optionally masked by the `v0` mask register.
 If masked and the mask bit corresponding to the destination element in `vd` is clear,
@@ -58,9 +80,9 @@ for n in [0, 7]
 These instructions always report exceptions with a `vstart` of 0;
 executing one with a nonzero `vstart` is reserved.
 
-== `{project-name}32a8i` 8-bit Integer Integrated Matrix Extension
+== `Zvreddot32a8i` 8-bit Integer Integrated Matrix Extension
 
-The {project-name}32a8i extension adds instructions that perform 1x8xVL matrix
+The Zvreddot32a8i extension adds instructions that perform 1x8xVL matrix
 multiply-accumulate operations on 8-bit integer multiplicands, accumulating
 into 32-bit integers.
 The `vqmmacc.u.vv` instruction treats the `vs2` operand as unsigned 8-bit
@@ -108,9 +130,24 @@ vqmmacc.s.vv vd, vs2, vs1, ci, vm
 ]}
 ```
 
-== `{project-name}32a16bf` BF16 Integrated Matrix Extension
+NOTE: Rewrite the following
+NOTE: While outer products are efficient when substantial accumulator state is
+added, the matrix-vector formulation has several advantages for performing
+matrix multiplication within the vector registers.
+It scales naturally with vector length while supporting the natural memory
+layout, enabling efficient use of unit-stride loads and stores when A and
+C are row-major and B is column-major.
+The register operand pattern is a better fit for existing vector register file
+datapaths, even moreso when the vector registers are renamed.
+The high-fan-in dot products allow for a greater degree of energy savings when
+using bulk-normalization schemes.
+Finally, the matrix-vector formulation can speed up certain cases of
+application-level matrix-vector multiplication, in particular when the matrix
+is column-major and skinny.
 
-The {project-name}32a16bf extension adds one instruction, `vfwmmacc.vv`, which
+== `Zvreddot32a16bf` BF16 Integrated Matrix Extension
+
+The Zvreddot32a16bf extension adds one instruction, `vfwmmacc.vv`, which
 performs a 1x8xVL matrix multiply-accumulate on BF16 multiplicands and an FP32
 accumulator.
 The instruction is reserved unless SEW=16, LMUL=1, and `vtype`.`altfmt`=1.
@@ -150,12 +187,12 @@ vfmmacc.vv vd, vs2, vs1, ci, vm
 ]}
 ```
 
-NOTE: A `{project-name}32a16f` extension that uses FP16 multiplicands instead of BF16
+NOTE: A `Zvreddot32a16f` extension that uses FP16 multiplicands instead of BF16
 could also be defined, using the same opcode but with `altfmt`=0.
 
-== `{project-name}32a8mxf` OCP MX Integrated Matrix Extension
+== `Zvreddot32a8mxf` OCP MX Integrated Matrix Extension
 
-The {project-name}32a8mxf extension adds instructions that perform 1x8xVL matrix
+The Zvreddot32a8mxf extension adds instructions that perform 1x8xVL matrix
 multiply-accumulate operations on 8-bit OCP MX multiplicands, accumulating
 into FP32.
 The `vfqmmacc.vv` instruction treats the `vs2` operand as E4M3 numbers,
@@ -204,12 +241,12 @@ vfqmmacc.alt.vv vd, vs2, vs1, ci, vm
 ]}
 ```
 
-NOTE: An `{project-name}16a8mxf` extension that accumulates into BF16 instead of FP32
+NOTE: An `Zvreddot16a8mxf` extension that accumulates into BF16 instead of FP32
 could also be defined.
 
-== `{project-name}32a32f` FP32 Integrated Matrix Extension
+== `Zvreddot32a32f` FP32 Integrated Matrix Extension
 
-The {project-name}32a32f extension adds one instruction, `vfmmacc.vv`, which performs
+The Zvreddot32a32f extension adds one instruction, `vfmmacc.vv`, which performs
 a 1x8xVL matrix multiply-accumulate on FP32 multiplicands and an FP32 accumulator.
 The instruction is reserved unless SEW=32 and LMUL=1.
 The `vs1`, `vs2`, and `vd` operands all have EEW=SEW.
@@ -364,7 +401,7 @@ loop:
 == Bulk Normalization
 
 
-This section describes the algorithm used by the {project-name}32a16bf and {project-name}32a8mxf extensions to compute dot-product accumulations.
+This section describes the algorithm used by the Zvreddot32a16bf and Zvreddot32a8mxf extensions to compute dot-product accumulations.
 The operation natively supports different formats for the product operands (dot product) and the addend.
 
 The operation is parametrized by the number of elements in the dot product, `n`.
@@ -447,31 +484,40 @@ Note:: In rounding-to-odd (RTO), it is equivalent to detect overflow before or a
 
 
 [#BulkNorm]
-=== Bulk normalization
+== RISC-V Bulk Normalization Algorithm
 
-A correctly rounded dot product is costly and overkill for the target applications. For floating-point operations, we employ bulk normalization: products and addend are aligned with respect to the largest operand exponent, called the **maximum reference exponent** or `max_exp`, a few extra bits are kept on both sides of the maximum operand exponent.
-Aligned products and addend are rounded once according to round-to-odd (RTO), then summed and the sum is rounded again according to RTO.
-During the first RTO rounding, values are rounded with a set precision defined with respect to the largest operand exponent.
-During the second RTO rounding, the result is rounded to the target output precision. 
-Result values whose exponents exceed that of the largest representable number before rounding are rounded to infinity.
+This section defines the RISC-V Bulk Normalization Algorithm (RVBNA), a scheme
+employed by multiple RISC-V extensions for efficient computation of
+floating-point dot products.
+
+A correctly rounded dot product is costly, and many applications do not
+require such a degree of accuracy.
+RVBNA reduces circuit cost and delay in exchange for a slight reduction in
+accuracy using _bulk normalization_, wherein all products are aligned with
+respect to a common exponent, called the _maximum reference exponent_, or
+`max_exp`.
+Aligned products are rounded to an intermediate precision according to round-to-odd (RTO), then summed.
+The sum is then rounded to the target precision according to RTO, but unlike
+RTO, out-of-range values are rouned to infinity, instead of the largest
+representable number.
 
 Formally, bulk normalization is characterized by multiple parameters:
 
-- `p`: the bit size of each factor significand (significand product is `2p`-bit wide, signed product is `2p+1`-bit wide)
-- `e`: the bit size of each factor biased exponent` (the bias is assumed to be `2^(e-1) - 1`)
-- `q`: the bit size of the result significand
-- `f`: the bit size of the result biased exponent (the bias is assumed to be `2^(f-1) - 1`)
+- `p`: the size of each factor significand (significand product is `2p`-bit wide, signed product is `2p+1`-bit wide)
+- `e`: the size of each factor biased exponent` (the bias is assumed to be `2^(e-1) - 1`)
+- `q`: the size of the result significand
+- `f`: the size of the result biased exponent (the bias is assumed to be `2^(f-1) - 1`)
 - `n`: the number of products accumulated
 - `o`: the number of overflow bits
 - `g`: the number of guard bits
 
+`o` is defined to accommodate any carry overflow and is defined to be `ceil(log2(n))`.
 
-`o` is defined to accommodate any carry overflow and is set to `ceil(log2(n+1))`.
+The number of guard bits, `g`, is also defined to be `ceil(log2(n))`.
 
-Note:: The value of `o` could be omitted; the mandate is: no accuracy loss must be incurred by carry overflow during the accumulation of aligned-and-rounded products and addend.
-
-The number of guard bits, `g`, is defined as `ceil(log2(n+1))`. It only depends on the number of product.
-
+----
+HERE
+----
 
 The actual bulk normalization method works as follows:
 
@@ -500,7 +546,7 @@ The bottom part illustrates a case where maximum reference exponent is that of t
 In both cases, some bits of the last two products fall under the guard bit limits. For each product those bits are OR-ed into the least significant guard bit (as part of the product round-to-odd). The same can be said for the addend in the top case.
 
 [#BulkNormFig]
-.{project-name} Bulk Normalization
+.Zvreddot Bulk Normalization
 image::dotprodacc_bulknorm.svg[width=80%]
 
 
