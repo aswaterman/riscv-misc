@@ -205,7 +205,10 @@ then using the instructions defined in this section.
 
 == OFP4 conversion extension *Zvfofp4min*, Version 0.1
 
-The Zvfofp4min extension introduces one new instruction, `vfext.vf2`, which is
+The Zvfofp4min extension provides basic support for the OFP4 format.
+Zvfofp4min requires the Zve32f extension.
+
+The Zvfofp4min extension adds one new instruction, `vfext.vf2`, which is
 defined only for SEW=8, `altfmt`=0, and LMUL {ge} 1/4.
 This instruction converts a vector of OFP4 values in `vs2` (with EEW=4 and
 EMUL=LMUL/2) to a vector of OFP8 E4M3 values in `vd` (with EEW=8 and EMUL=LMUL).
