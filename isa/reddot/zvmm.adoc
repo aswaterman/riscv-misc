@@ -8,17 +8,20 @@ This document describes several extensions that accelerate the computation
 of Euclidean inner products, a.k.a. dot products.
 The extensions fall into two classes: dot products between two vectors,
 producing a scalar result; and _batched_ dot products, wherein one vector is
-broadcast to eight vectors to perform eight dot produts, producing a vector of
-eight results.
+broadcast to up to eight vectors to perform up to eight dot produts, producing
+a vector of eight results.
 Both formats support a variety of formats, including widening accumulations.
 
 == `Zvreddot32a8i` 8-bit Integer Dot-Product Extension, Version {reddot-version}
 
-The Zvreddot32a8i extension adds two instructions, each of which performs a dot
-product between two 8-bit integer vectors, accumulating into a 32-bit scalar.
-The `vqmreddotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
-integers, whereas the `vqmreddots.vv` instruction treats the `vs2` operand
-as signed 8-bit integers.
+The Zvreddot32a8i extension adds two instructions, each of which performs
+a dot product between two 8-bit integer vectors, accumulating into a 32-bit
+scalar.
+Zvreddot32a8i requires the Zve32x extension.
+
+The `vqreddotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
+integers, whereas the `vqreddots.vv` instruction treats the `vs2` operand as
+signed 8-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
 These instructions are reserved unless SEW=8.
@@ -32,15 +35,48 @@ destination overlaps any source, including the mask register.
 ----
 # Zvreddot32a8i 8-bit integer dot product instructions
 # signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
-vqmreddotu.vv vd, vs2, vs1, vm   # vd += unsigned(vs2) dot vs1
-vqmreddots.vv vd, vs2, rs1, vm   # vd += signed(vs2) dot vs1
+vqreddotu.vv vd, vs2, vs1, vm   # vd += unsigned(vs2) dot vs1
+vqreddots.vv vd, vs2, rs1, vm   # vd += signed(vs2) dot vs1
 ----
 
 The instructions multiply each active element in `vs2` by the corresponding
 element in `vs1`, then sum all of the products in 32-bit integer arithmetic,
 add the sum to element 0 of `vd`, and write the result to element 0 of `vd`.
 
-== (Additional dot product instructions go here)
+== `Zvreddot64a16i` 16-bit Integer Dot-Product Extension, Version {reddot-version}
+
+The Zvreddot64a16i extension adds two instructions, each of which performs
+a dot product between two 16-bit integer vectors, accumulating into a 64-bit
+scalar.
+Zvreddot64a14i requires the Zve64x extension.
+
+The new instructions in Zvreddot64a16i define the `vqreddotu.vv` and
+`vqreddots.vv` instructions for SEW=16.
+Except for the wider operands, these instructions have the same semantics as
+the instructions defined in the Zvreddot32a8i extension.
+
+== `Zvreddot32a8of` 8-bit OFP8 Dot-Product Extension, Version {reddot-version}
+
+The Zvreddot32a8mxf extension adds two instructions, each of which performs
+a dot product between two OFP8 vectors, accumulating into FP32.
+The `vfqreddot.vv` instruction treats the `vs2` operand as E4M3 numbers,
+whereas the `vfqreddot.alt.vv` instruction treats the `vs2` operand
+as E5M2 numbers.
+The `vtype`.`altfmt` field selects the datatype of the `vs1` operand,
+with 0 indicating E4M3 and 1 indicating E5M2.
+These instructions are reserved unless SEW=8 and LMUL=1.
+The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
+EEW=4*SEW.
+
+Dot products are computed using the accumulation algorithm defined in Section
+<<#DotProdAccum>>.
+
+----
+# Zvreddot32a8of 8-bit OFP8 dot product instructions
+# format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
+vfqreddot.vv     vd, vs2, vs1, vm   # vd += E4M3(vs2) dot vs1
+vfqreddot.alt.vv vd, vs2, rs1, vm   # vd += E5M2(vs2) dot vs1
+----
 
 == Batched Dot Products
 
@@ -397,8 +433,27 @@ loop:
   bnez a0, loop
 ```
 
+[#DotProdAccum]
+== Floating-Point Dot Product Accumulation Algorithm
+
+The floating-point dot-product extensions defined in this chapter allow
+some implementation freedom, following the following algorithm.
+
+- Each product is computed exactly.
+- Optionally, products are grouped, not necessarily consecutively, into an
+implementation-defined number of sets.  Each set is reduced to a value, in
+precision no less than that of the accumulator, using the <<#BulkNormScheme>>.
+- Optionally, the remaining values are rounded-to-odd to a precision no less
+than that of the accumulator.
+- The remaining values and the accumulator are summed using the algorithm
+employed by the `vfredosum.vs` instruction, in precision no less than that of
+the accumulator.
+
+The rounding and reduction schemes must be deterministic for a given value in
+`vtype` and `vl`.
+
 [#BulkNormScheme]
-== Bulk Normalization
+== Bulk Normalization Algorithm
 
 
 This section describes the algorithm used by the Zvreddot32a16bf and Zvreddot32a8mxf extensions to compute dot-product accumulations.
