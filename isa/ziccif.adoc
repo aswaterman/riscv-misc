@@ -93,6 +93,32 @@ executing a FENCE.I instruction, or to a remote hart's instruction fetches by
 executing a FENCE then requesting (e.g. via IPI) that the remote hart execute
 a FENCE.I.
 
+
+Additionally, any instruction fetches ordered by a FENCE.I instruction must
+also be ordered after any explicit memory accesses due to loads and stores
+that appear in program order before the FENCE.I.
+
+[NOTE]
+====
+This requirement facilitates cross-modification of code.
+In the following litmus test, for example, the outcome `a0`=1, `a1`=0 on
+the consumer thread is forbidden:
+
+```
+Initially, flag = 0.
+
+Producer:                                       Consumer:
+
+la t0, patch_me                                 la t0, flag
+li t1, 0x4585                                   lw a0, (t0)
+sh t1, (t0)   # patch_me := c.li a1, 1          fence.i
+fence w, w    # order flag write              patch_me:
+la t0, flag                                     c.li a1, 0
+li t1, 1
+sw t1, (t0)   # flag := 1
+```
+====
+
 The Ziccid extension depends on the Ziccif extension.
 
 NOTE: Although instruction/data coherence and instruction-fetch atomicity are
