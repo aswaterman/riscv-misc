@@ -81,12 +81,13 @@ return a value that a load from the same address would have returned, provided
 sufficient permissions.
 
 While instruction fetches may still be performed early and
-speculatively, they must not be performed earlier than the most recent FENCE.I
-instruction, and they must not be succeeded in the global memory order by an
-infinite sequence of other memory operations.
+speculatively, the instruction fetches for instructions that follow a FENCE.I
+instruction in program order must not be performed earlier than that FENCE.I.
+Furthermore, the extent to which an instruction fetch may be performed early
+must be bounded.
 
 NOTE: This definition guarantees that stores _eventually_ become visible to
-instruction fetches.
+instruction fetches, even without executing a FENCE.I instruction.
 As is the case without the Ziccid extension, a store from the current hart can
 be made visible to the hart's instruction fetches in program order by
 executing a FENCE.I instruction, or to a remote hart's instruction fetches by
