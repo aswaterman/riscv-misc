@@ -83,11 +83,11 @@ sufficient permissions.
 While instruction fetches may still be performed early and
 speculatively, the instruction fetches for instructions that follow a FENCE.I
 instruction in program order must not be performed earlier than that FENCE.I.
-Furthermore, the extent to which an instruction fetch may be performed early
-must be bounded.
 
-NOTE: This definition guarantees that stores _eventually_ become visible to
-instruction fetches, even without executing a FENCE.I instruction.
+NOTE: Since, under Ziccid, instruction fetches appear in the global memory
+order, the RVWMO progress axiom suffices to guarantee that stores _eventually_
+become visible to instruction fetches, even without executing a FENCE.I
+instruction.
 As is the case without the Ziccid extension, a store from the current hart can
 be made visible to the hart's instruction fetches in program order by
 executing a FENCE.I instruction, or to a remote hart's instruction fetches by
