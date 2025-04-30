@@ -80,6 +80,10 @@ An instruction fetch from memory with the cacheability and coherence PMAs must
 return a value that a load from the same address would have returned, provided
 sufficient permissions.
 
+NOTE: As a consequence of this definition, the RVWMO load-value axiom applies,
+and so an instruction fetch is allowed to observe a store from the same hart
+before the store has become globally visible.
+
 While instruction fetches may still be performed early and
 speculatively, the instruction fetches for instructions that follow a FENCE.I
 instruction in program order must not be performed earlier than that FENCE.I.
