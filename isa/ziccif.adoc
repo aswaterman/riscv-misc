@@ -60,7 +60,7 @@ Because ILEN must be at least the width of the instruction being modified,
 a lower bound on `M` can be inferred from the instruction's width and XLEN.
 ====
 
-== Ziccid Extension for Instruction/Data Consistency, Version 0.2
+== Ziccid Extension for Instruction/Data Coherence and Consistency, Version 0.2
 
 The Ziccid extension mandates more stringent requirements for consistency
 between instruction fetches and other memory accesses than those imposed by
@@ -138,10 +138,10 @@ a FENCE.I.
 Additionally, any instruction fetches ordered by a FENCE.I instruction must
 also be ordered after any explicit memory accesses due to loads and stores
 that appear in program order before the FENCE.I.
+This requirement facilitates cross-modification of code.
 
 [NOTE]
 ====
-This requirement facilitates cross-modification of code.
 In the following litmus test, for example, the outcome `a0`=1, `a1`=0 on
 the consumer thread is forbidden:
 
@@ -158,6 +158,11 @@ la t0, flag                                     c.li a1, 0
 li t1, 1
 sw t1, (t0)   # flag := 1
 ```
+
+Note that this example is only meant to illustrate the aforementioned ordering
+property.
+In a realistic producer-consumer code-generation scheme, the consumer would loop
+until `flag` becomes 1 before executing the FENCE.I instruction.
 ====
 
 The Ziccid extension depends on the Ziccif extension.
