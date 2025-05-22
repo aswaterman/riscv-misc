@@ -134,7 +134,7 @@ NOTE: Because most of the accumulation occurs using fixed-point carry-save arith
 mandating this scheme still offers some degree of implementation flexibility.
 
 ```
-vfmmacc.vv vd, vs2, vs1, ci, vm
+vfwmmacc.vv vd, vs2, vs1, ci, vm
 ```
 
 ```wavedrom
