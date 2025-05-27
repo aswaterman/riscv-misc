@@ -1,0 +1,38 @@
+:le: &#8804;
+:ge: &#8805;
+:ne: &#8800;
+
+== OFP4 conversion extension *Zvfofp4min*, Version 0.1
+
+The Zvfofp4min extension provides basic support for the OFP4 format.
+Zvfofp4min requires the Zve32f extension.
+
+The Zvfofp4min extension adds one new instruction, `vfext.vf2`, which is
+defined only for SEW=8, `altfmt`=0, and LMUL {ge} 1/4.
+This instruction converts a vector of OFP4 values in `vs2` (with EEW=4 and
+EMUL=LMUL/2) to a vector of OFP8 E4M3 values in `vd` (with EEW=8 and EMUL=LMUL).
+No rounding occurs, and no floating-point exception flags are set.
+`vfext.vf2` is encoded in the VXUNARY0 encoding space with `vs1`=10110.
+
+NOTE: It is expected that conversion to only one of the two OFP8 formats is
+sufficient, since most commonly the OFP8 result will be consumed by an
+operator that supports both OFP8 formats.
+Between the two formats, E4M3 is the logical choice because, unlike E5M2, it
+is also capable of exactly representing all values in both OFP6 formats.
+
+NOTE: Other floating-point widening conversions have their source EEW equal to
+SEW and their destination EEW equal to 2×SEW.
+To follow that pattern for conversions from 4-bit types would require `vsew`
+to be able to represent SEW=4, which it currently cannot.
+Rather than introducing additional SEW encodings and addressing the
+definitional challenges of SEW being smaller than one byte, we instead
+followed the Vector Integer Extension pattern, in which SEW equals the
+destination EEW.
+
+The `vfext.vf2` instruction does not access the `fcsr`, and it is _not_
+considered a floating-point instruction for the purposes of the floating-point
+context status (FS) settings.
+
+NOTE: This approach simplifies illegal-instruction exception logic, since this
+instruction encoded in a minor opcode otherwise only used by integer
+instructions.
