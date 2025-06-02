@@ -10,7 +10,8 @@ The extensions fall into two classes: _long_ dot products between two vectors,
 producing a scalar result; and _batched_ dot products, wherein one vector is
 broadcast to eight vectors to perform eight dot produts, producing a vector of
 eight results.
-Both formats support a variety of formats, including widening accumulations.
+Both classes support a variety of data formats, including widening
+accumulations.
 
 == `Zvldot` Family of Long Dot-Product Extensions, Version {dot-version}
 
@@ -52,11 +53,15 @@ The `vd` operand has EEW=4*SEW.
 ----
 # Zvqldot8i 8-bit integer dot product instructions
 # signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
-vqldotu.vv vd, vs2, vs1, vm   # vd += unsigned(vs2) dot vs1
-vqldots.vv vd, vs2, rs1, vm   # vd += signed(vs2) dot vs1
+vqldotu.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
+vqldots.vv vd, vs2, rs1, vm   # vd[0] += signed(vs2) dot vs1
 ----
 
-Dot products are computed mod 2^32^; overflow is ignored.
+These dot products are computed mod 2^32^; overflow is ignored.
+
+The instructions are encoded in major opcode 0x77 with funct3=0,
+and with funct6=0x26 for `vqldotu.vv` and funct6=0x27 for
+`vqldots.vv`.
 
 === `Zvfwldot16bf` BF16 Dot-Product Extension, Version {dot-version}
 
@@ -68,11 +73,13 @@ The `vd` operand has EEW=2*SEW.
 ----
 # Zvfwldot16bf BF16 dot product instruction
 # altfmt=1
-vfwldot.vv vd, vs2, vs1, vm   # vd += vs2 dot vs1
+vfwldot.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
 ----
 
-Dot products are computed using the bulk-normalization scheme defined in
-Section <<#BulkNorm>>.
+These dot products are computed using the bulk-normalization scheme defined in
+Section <<#RVBNA>>.
+
+The `vfwldot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x24.
 
 NOTE: A future extension could define an instruction that uses the same code
 points with `vtype`.`altfmt`=0 to compute IEEE 754 FP16 dot products.
@@ -92,12 +99,16 @@ The `vd` operand has EEW=4*SEW.
 ----
 # Zvfqldot8mxf 8-bit integer dot product instructions
 # format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
-vfqldot.vv     vd, vs2, vs1, vm   # vd += E4M3(vs2) dot vs1
-vfqldot.alt.vv vd, vs2, rs1, vm   # vd += E5M2(vs2) dot vs1
+vfqldot.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
+vfqldot.alt.vv vd, vs2, rs1, vm   # vd[0] += E5M2(vs2) dot vs1
 ----
 
-Dot products are computed using the bulk-normalization scheme defined in
-Section <<#BulkNorm>>.
+These dot products are computed using the bulk-normalization scheme defined in
+Section <<#RVBNA>>.
+
+The instructions are encoded in major opcode 0x77 with funct3=1,
+and with funct6=0x26 for `vfqldot.vv` and funct6=0x27 for
+`vfqldot.alt.vv`.
 
 == `Zvbdot` Family of Batched Dot-Product Extensions, Version {dot-version}
 
@@ -120,7 +131,7 @@ image::zvmm-simple.svg[Static, pdfwidth=4in, title="Zvreddot operation, VLEN &#8
 For long-vector implementations with VLEN > 8*EEW, each instruction also has
 a 3-bit scaled-by-8 immediate `ci` indicating which eight elements of `vd`
 destination vector are read and written.
-The instruction is reserved if `ci` {ge} VLMAX.
+The instruction is reserved if `ci` {ge} `VLEN/(8*EEW)`.
 
 NOTE: The ability to use all of `vd` improves the efficiency of register-tiled
 matrix multiplication.
@@ -211,20 +222,9 @@ vqmmacc.s.vv vd, vs2, vs1, ci, vm
 ]}
 ```
 
-NOTE: Rewrite the following
-NOTE: While outer products are efficient when substantial accumulator state is
-added, the matrix-vector formulation has several advantages for performing
-matrix multiplication within the vector registers.
-It scales naturally with vector length while supporting the natural memory
-layout, enabling efficient use of unit-stride loads and stores when A and
-C are row-major and B is column-major.
-The register operand pattern is a better fit for existing vector register file
-datapaths, even moreso when the vector registers are renamed.
-The high-fan-in dot products allow for a greater degree of energy savings when
-using bulk-normalization schemes.
-Finally, the matrix-vector formulation can speed up certain cases of
-application-level matrix-vector multiplication, in particular when the matrix
-is column-major and skinny.
+The instructions are encoded in major opcode 0x77 with funct3=0,
+and with funct6=0x2e for `vqbdotu.vv` and funct6=0x2f for
+`vqbdots.vv`.
 
 == `Zvreddot32a16bf` BF16 Integrated Matrix Extension
 
@@ -236,7 +236,7 @@ The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=2*SEW.
 
 Each dot product is computed using the bulk-normalization scheme defined in
-Section <<#BulkNormScheme>>.
+Section <<#RVBNA>>.
 
 NOTE: Informally, the product exponents are approximated by summing the
 multiplicand exponents, modulo the bias.
@@ -268,8 +268,7 @@ vfwmmacc.vv vd, vs2, vs1, ci, vm
 ]}
 ```
 
-NOTE: A `Zvreddot32a16f` extension that uses FP16 multiplicands instead of BF16
-could also be defined, using the same opcode but with `altfmt`=0.
+The `vfwbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
 
 == `Zvreddot32a8mxf` OCP MX Integrated Matrix Extension
 
@@ -286,7 +285,7 @@ The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
 Each dot product is computed using the bulk-normalization scheme defined in
-Section <<#BulkNormScheme>>.
+Section <<#RVBNA>>.
 
 ```
 vfqmmacc.vv vd, vs2, vs1, ci, vm
@@ -322,8 +321,9 @@ vfqmmacc.alt.vv vd, vs2, vs1, ci, vm
 ]}
 ```
 
-NOTE: An `Zvreddot16a8mxf` extension that accumulates into BF16 instead of FP32
-could also be defined.
+The instructions are encoded in major opcode 0x77 with funct3=1,
+and with funct6=0x2e for `vfqbdot.vv` and funct6=0x2f for
+`vfqbdot.alt.vv`.
 
 == `Zvreddot32a32f` FP32 Integrated Matrix Extension
 
@@ -478,93 +478,7 @@ loop:
   bnez a0, loop
 ```
 
-[#BulkNormScheme]
-== Bulk Normalization
-
-
-This section describes the algorithm used by the Zvreddot32a16bf and Zvreddot32a8mxf extensions to compute dot-product accumulations.
-The operation natively supports different formats for the product operands (dot product) and the addend.
-
-The operation is parametrized by the number of elements in the dot product, `n`.
-It expects 3 operands: `A[]`, `B[]`, and `C`.
-A and B are n-element arrays of floating-point numbers. C is a floating-point number.
-
-The result corresponds to the sum of the n-D dot product between arrays A and B and the addend C.
-The algorithm also sets two exception flags: invalid operation and overflow.
-The sum is performed using a bulk-normalization algorithm described in Section <<#BulkNorm>>.
-
-
-=== Rounding modes
-
-For the final rounding of this floating-point dot product operation, this scheme only supports rounding-to-odd (RTO) with some specificities (see <<#DotProdRTO>>).
-
-Note that there are other intermediate roundings (each aligned operand is rounded to odd). They are described in details in Section <<#BulkNorm>>.
-
-[#DotProdRTO]
-=== Rounding to Odd behavior in dot product mode
-
-Rounding to odd (RTO) is not part of the IEEE-754 standard (at least not until and including revision 2019).
-
-The version used for the dot product operation admits two divergences with the generally accepted definition:
-
-- When overflowing, an infinity result is returned (rather than the largest magnitude normal number) see <<#Overflow>>
-- A zero result is always positive (+0) whatever the sign of the actual zero term of the dot product sum
-
-
-=== Support for subnormal numbers
-
-Subnormal values for both inputs and outputs are fully supported.
-
-- the subnormal inputs are not normalized before or after the product
-- the biased subnormal input exponent is fixed to `emin_normal` for each subnormal operand when computing the product/addend reference exponent (used to evaluate `max_exp` and shift amounts)
-- the result is denormalized before the final round-to-odd is applied.
-
-[#ZeroBehavior]
-=== Behavior on floating-point zeros
-
-If the result of a dot product accumulate operation is zero then `+0` should be returned
-
-This includes the cases where all the operands are zero: `+0` should be returned. 
-
-Note:: This specification mandates that `+0` be returned even when summing products that would have been equal to `-0` with any standard IEEE-754 rounding modes (e.g. `-0 * 1 + -0 * 1`).
-
-
-[#ExceptionFlags]
-=== IEEE exception flags
-
-Only the invalid operation and overflow flags can be raised.
-
-Note:: Since support for the underflow flag is not included, tininess detection has no impact on functionality.
-
-[#InvalidOperation]
-==== Invalid operation
-
-The invalid operation flag must be raised if at least one of the following conditions is met:
-
-- Any of the operands is a signaling NaN
-- At least one of the following conditions:
-**** there are at least two products that are infinites with opposite sign
-**** there is at least one product between a zero and an infinity
-
-
-
-Note:: A product is said to be infinite when it is the product between an infinity and a non-zero finite number.
-
-Note:: The invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
-
-[#Overflow]
-==== Overflow
-
-The overflow flag is raised according to the IEEE-754 definition:
-
-> The overflow exception shall be signaled if and only if the destination format’s largest finite number is exceeded in magnitude by what would have been the rounded floating-point result were the exponent range unbounded.
-
-The result returned in case of an overflow is infinity with the sign of the result with unbounded exponent. This diverges from a generally accepted definition of RTO (which rounds values exceeding the largest finite value to that extremum).
-
-Note:: In rounding-to-odd (RTO), it is equivalent to detect overflow before or after rounding as RTO rounding cannot make the significand overflow and force a late exponent change. This applies whatever the choice for the result returned in case of overflow.
-
-
-[#BulkNorm]
+[#RVBNA]
 == RISC-V Bulk Normalization Algorithm
 
 This section defines the RISC-V Bulk Normalization Algorithm (RVBNA), a scheme
@@ -584,10 +498,10 @@ representable number.
 
 Formally, bulk normalization is characterized by multiple parameters:
 
-- `p`: the size of each factor significand (significand product is `2p`-bit wide, signed product is `2p+1`-bit wide)
-- `e`: the size of each factor biased exponent` (the bias is assumed to be `2^(e-1) - 1`)
-- `q`: the size of the result significand
-- `f`: the size of the result biased exponent (the bias is assumed to be `2^(f-1) - 1`)
+- `p`: the size of each factor's significand (significand product is `2p`-bit wide, signed product is `2p+1`-bit wide)
+- `e`: the size of each factor's biased exponent` (the bias is `2^(e-1) - 1`)
+- `q`: the size of the result's significand
+- `f`: the size of the result's biased exponent (the bias is `2^(f-1) - 1`)
 - `n`: the number of products accumulated
 - `o`: the number of overflow bits
 - `g`: the number of guard bits
@@ -596,11 +510,7 @@ Formally, bulk normalization is characterized by multiple parameters:
 
 The number of guard bits, `g`, is also defined to be `ceil(log2(n))`.
 
-----
-HERE
-----
-
-The actual bulk normalization method works as follows:
+Informally, RVBNA works as follows:
 
 - Computing maximum exponent `max_exp`:
 **** Computing each product and the addend **reference exponent** (details in <<#ReferenceExponent>>)
@@ -609,92 +519,51 @@ The actual bulk normalization method works as follows:
 **** Each product is extended to `q-1+g` fractional bits (right padding of `(q-1+g) - (2*p-2)` zeros)
 **** Each extended product is right shifted by its reference exponent subtracted from `max_exp` (discarded significand bits are OR-reduced with any trailing bits when performing RTO)
 - Rounding to odd each aligned product magnitude
-- Aligning the addend magnitude on `max_exp` (1 integer bits and `q-1` fractional bits)
-**** The addend is extended to `q-1+g` fractional bits (right padding of `g` zeros)
-**** The addend is right shifted by its reference exponent subtracted from `max_exp` (discarded significand bits are OR-reduced with any trailing bits when performing RTO)
-- Rounding to odd each aligned product/addend magnitude
-- Selecting an accumulator sign `S`, negating the aligned-rounded product(s)/addend whose sign does not match `S`
-- Accumulating the rounded products and the addend. If the final sum is negative, negate it and negate `S` as well
-- Normalizing/Denormalizing the result and round it to odd to a `(q-1)`-bit mantissa `M` (omitting implicit bit for normal results), computing the result exponent, `E`
+- Selecting an accumulator sign `S`, negating the aligned-rounded product(s) whose sign does not match `S`
+- Accumulating the rounded products. If the final sum is negative, negate it and negate `S` as well
+- Normalizing/Denormalizing the result and round it to odd to binary32 mantissa `M`, computing the result exponent, `E`
 - Building output result from `S`, `E`, and `M`
-- Raising relevant IEEE flags (`invalid` and `overflow`) when applicable
 
+Bulk Normalization is illustrated by Figure <<#BulkNorm>>. 4 products are aligned.
+For the two bottom products, some bits fall under the guard bit limits. For each product those bits are OR-ed into the least significant guard bit.
 
-Two cases of the Bulk Normalization step are illustrated by Figure <<#BulkNormFig>>. 4 products and one addend are aligned.
-The top part illustrates a case where the maximum reference exponent is that of one of the products. 
-The bottom part illustrates a case where maximum reference exponent is that of the addend.
-
-In both cases, some bits of the last two products fall under the guard bit limits. For each product those bits are OR-ed into the least significant guard bit (as part of the product round-to-odd). The same can be said for the addend in the top case.
-
-[#BulkNormFig]
-.Zvreddot Bulk Normalization
-image::dotprodacc_bulknorm.svg[width=80%]
+[#BulkNorm]
+.RISC-V Bulk Normalization Algorithm
+image::dotprod-bulknorm.svg[width=80%]
 
 
 The following is a functional description of bulk normalization:
 ```
-// n is the static dimension of the dot product (it should be a power of two)
+// n is the static dimension of the dot product (a power of two)
 // In this specification, the number of guard bits, g, and the number of
 // overflow bits, o, are defined as:
 // g = o = log2(n)
 //
 // A[i] and B[i] are IEEE-encoded floating point numbers on (e+p) bits
-// (MSB is sign, next e bits are the biased exponent, last m bits are the mantissa)
-// exponent bias is prodOpBias = (1 << (e - 1)) - 1 
+// (MSB is sign, next e bits are biased exponent, last m bits are the mantissa)
+// exponent bias is prodOpBias 
 // p = m + 1
-//
-// C is an IEEE-encoded floating-point number on (f+q) bits
-// exponent bias is addendBias = (1 << (f - 1)) - 1
-//
 // the output is an IEEE-encoded floating-point number on (f+q) bits
-// f is the addend/result exponent bit width and
-// q is the size of the addend/result significand
-// (q - 1 is the size of the output mantissa)
-BulkNormalizedDotProduct(A[n], B[n], C) {
-    let maxExp = 0 // maximum reference exponent
-    let maskExp = (1 << e) - 1 // bitmask for exponent
-    let maskMant = (1 << m) - 1 // bitmask for mantissa
-    let prodRefExps[n] = {0} // array of product reference exponents
-    let prodSigns[n] = {0} // array of product signs
-    let prodSigs[n] = {0} // array of significand products
+// f is the output exponent width and
+// q is the size of the output significand (q - 1 is the size of the output mantissa)
+BulkNormalizedDotProduct(A[n], B[n]) {
+   let maxExp = 0
+   let maskExp = (1 << e) - 1 // bitmask for exponent
+   let maskMant = (1 << m) - 1 // bitmask for mantissa
+   let prodRefExps[n] = {0} // array of product reference exponents
+   let prodSigns[n] = {0} // array of product signs
+   let prodSigs[n] = {0} // array of significand products
 
-    // boundary for exponent overflow (output format)
-    // this is also the output exponent for infinities and NaNs
-    let overflowExp = (1 << f) - 1
-    
-    // bias to be added to the sum of product biased exponents
-    // to get the corresponding biased exponent in the output/addend format
-    let prodExpOffset = -2 * prodOpBias + addendBias
+   // boundary for exponent overflow (output format)
+   // this is also the output exponent for infinity and NaN
+   let overflowExp = (1 << f) - 1
 
-    // predicate output special cases
-    let nanResult = false
-    let invalidFlag = false
-    let infinite = false
-    let infiniteSign = 0
 
-    // extracting C's properties
-    let C_exp = (C >> (q - 1)) & overflowExp
-    let C_mant = (C & ((1 << (q - 1)) - 1))
-    let C_sign = (C >> (f + q - 1)) & 0x1
-    let C_sig = ((!C_isSub) << (q - 1)) | C_mant
-
-    let C_isSub = C_exp == 0
-    let C_isZero = (C_isSub && C_mant == 0)
-
-    let C_isInf = (C_exp == overflowExp) && (C_mant == 0)
-    let C_isNaN = (C_exp == overflowExp) && (C_mant != 0)
-    let C_isSNaN = C_isNaN && (C_mant & (1 << (q - 2))) == 0
-
-    infinite = C_isInf
-    infiniteSign = C_sign
-    nanResult = C_isNaN
-    invalidFlag = C_isSNaN
-
-    // Since addend and product bias can differ, at least one of the two
-    // must be rebiased. Since the addend and the result have the same
-    // format it can be simpler to rebias the products
-    let minExp = min(-(prodOpBias * 2) + addendBias, 0)
-    maxExp = C_isZero ? minExp : ((C_isSub ? 1 : C_exp))
+   // predicate output special cases
+   let nanResult = false
+   let invalidFlag = false
+   let infinite = false
+   let infiniteSign = 0
 
     // determining maximum reference exponent
     for i in 0 to n - 1
@@ -743,8 +612,7 @@ BulkNormalizedDotProduct(A[n], B[n], C) {
         let A_i_ref_exp = (A_i_isSub ? 1 : A_i_exp)
         let B_i_ref_exp = (B_i_isSub ? 1 : B_i_exp)
 
-        let nonZeroProdExp = A_i_ref_exp + B_i_ref_exp + prodExpOffset
-        prodRefExps[i] = prod_isZero ? minExp : nonZeroProdExp 
+        prodRefExps[i] = prod_isZero ? 0 : A_i_ref_exp + B_i_ref_exp
 
         maxExp = (prodRefExps[i] > maxExp ? prodRefExps[i] : maxExp)
     end for
@@ -781,41 +649,18 @@ BulkNormalizedDotProduct(A[n], B[n], C) {
         alignedProducts[i] |= (jam ? 1 : 0) // rounding to odd aligned product
     end for
 
-
-    let alignedAddend = 0
-    // aligning Addend
-    {
-        let alignShift = maxExp - (C_isZero ? minExp : ((C_isSub ? 1 : C_exp)))
-        let padRight = g
-        alignedAddend = (C_sig << padRight) >> alignShift
-
-        // evaluating values of discarded bits
-        // a mask is built to extract the discarded bits
-        // - mask=0 if alignShift is <= g
-        // - mask=(1 << q) - 1 if alignShift=q+g
-        let discardedMask = ((1 << q) - 1) >> (q + g - alignShift)
-        let discardedBits = C_sig & discardedMask
-        let jam = (alignShift >= (q+g) ? C_sig: discardedBits) != 0
-
-        alignedAddend |= (jam ? 1 : 0) // rounding to odd aligned addend
-    }
-
     // accumulating products
     let accumulator = 0
     for i in 0 to n - 1
         accumulator += prodSigns[i] ? -alignedProducts[i] : alignedProducts[i]
     end for
 
-    // accumulating addend
-    accumulator += C_sign ? -alignedAddend : alignedAddend
-
     // computing accumulator absolute value and normalizing it
     let accSign = accumulator < 0
     let accAbs = accSign ? -accumulator : accumulator;
-    let lzc = LZC(accAbs) // leading zero count assuming width of (g + q + 1 + o)
+    let lzc = LZC(accAbs) // leading zero count assuming g + q + 1 + o width
 
-    // maxExp should already be properly biased at that point
-    let resExp = accumulator == 0 ? 0 : (maxExp + o + 1 - lzc)
+    let resExp = accumulator == 0 ? 0 : ((maxExp + o + 1 - lzc) - prodOpBias)
     let unroundedSig = (accAbs << lzc) >> (g + o + 1)
     let rawJamMask = (1 << (g + o + 1)) - 1
     let jamMask = (rawJamMask >> (lzc > (g + o + 1) ? 0 : (g + o + 1 - lzc)))
@@ -823,7 +668,7 @@ BulkNormalizedDotProduct(A[n], B[n], C) {
     let jamSig = ((accAbs << lzc) & jamMask) != 0
     let roundedSig = unroundedSig | (jamSig ? 1 : 0)
 
-    if (accumulator == 0) {
+    if (accAbs == 0) {
         // a zero result is always +0
         return 0
     } else if (resExp >= overflowExp) {
@@ -850,51 +695,90 @@ BulkNormalizedDotProduct(A[n], B[n], C) {
 }
 ```
 
+Note:: For the 2D dot product, it is possible to choose the sign of the accumulator to be the sign of the smaller (magnitude) product if it differs from the sign of the larger product. This way, the larger product can be (bitwise) negated while the smaller product is aligned and rounded.
+
+Note:: In the current specification the most significant bit of the max product has a weight of `max_exp + 1`, which means that there are `q-2+g` fractional bits in the max product. `g` could be increased to `ceil(log2(n)) + 1` to ensure the number of fractional bits is at least `q-1` (identical to the output format). Numerical impacts of the value of `g` have not been evaluated. 
+
+Note:: Any one of the `2*p` bits of the max product can be the leading bit due to leading zeros in subnormal inputs. It is also possible for the maximum product to have more leading zeros than the other products (including when product alignment is taken into account). This is discussed in more detailed in the next section <<#ReferenceExponent>>.
 
 [#ReferenceExponent]
 ==== Reference Exponent
 
-The **reference exponent** is a proxy to the sum operand exponent. It is used to determine the largest operand and to align the smaller operands with respect to it.
+The **reference exponent** is a proxy to the product exponent used to determine the largest product and to align the smaller products with respect to it.
 
-The **reference exponent** of a product is evaluated as the sum of the factors' biased exponents, the output format bias, and minus two times the product operand bias.
+
+The **reference exponent** of a product is evaluated as the sum of the factors' biased exponents.
 If a non-zero factor is subnormal then biased `emin_normal` (`=1`) is used as its biased exponent, for purposes of computing the **reference exponent**.
 
-The **reference exponent** of the addend is its bias exponent if it is normal, one if it is a non-zero subnormal and an extremal value described below if it is zero.
+Note:: the minimal reference exponent for a non-zero product is `2` (`emin_normal + emin_normal`).
 
-Note:: Before application of any bias, the minimal reference exponent for a non-zero product is `2` (`emin_normal + emin_normal`).
+If a product operand is zero then the product exponent is set to a value which ensures that every non-zero product is considered greater than every zero product when determining the maximum product. A zero product should not force any loss of accuracy on non-zero products.
 
-If a sum operand is zero then the reference exponent is set to a value, called the **extremal value**, which ensures that every non-zero operand is considered greater than every zero operand when determining the maximum operand. A zero product should not force any loss of accuracy on non-zero products.
+Note:: for a dot product where the left hand side vector and the right hand side vector have different formats then the bias used for the exponent may differ.
+This bias has no impact on the difference between the **reference exponents**.
 
-Note:: For products, the **reference exponent** may differ from the actual product exponent (with the latter being defined as the exponent of the leading non-zero digit of the product). For example it does not take into account the actual number of leading zeros of the product (which can be large if at least one of the operand is subnormal). This simplification implies that the `max_exp` used to align products may not actually be that close to the real exponent of the maximum product and the maximum product could even be different from the one that set `max_exp`. Using the reference exponent rather the real exponent simplifies the product exponent evaluation and comparison logic.
-
-
-
+Note:: The **reference exponent** may differ from the product exponent (with the latter being defined as the exponent of the leading non-zero digit of the product). For example it does not take into account the actual number of leading zeros of the product (which can be large if at least one of the operand is subnormal). This simplification implies that the `max_exp` used to align products may not actually be that close to the real exponent of the maximum product and the maximum product could even be different from the one that set `max_exp`. Using the reference exponent rather the real exponent simplifies the product exponent evaluation and comparison logic.
 
 
 
-[#BulkNormAccuracy]
-== Appendix: discussion on the accuracy of bulk-normalization.
 
 
-Using a bulk-normalized dot product represents a trade-off between accuracy and efficiency.
-Using a reference exponent moves this trade-off towards more efficiency, trading-off for less accuracy.
+=== Rounding modes
 
-This is in particular visible when one of the product has a subnormal operand and the other does not.
-Let's take an example with a binary16 2-element dot product with a binary32 result: `a_0 * b_0 + a_1 * b_1`.
+For floating-point dot product operations, RVBNA only supports rounding-to-odd (RTO) with some specificites (see <<#DotProdRTO>>).
 
-- `a_0 = 0x0.004p-14` (minimal subnormal operand), reference exponent is `-14`, real exponent is `-24`
-- `b_0 = 0x1.000p0`   (`1.0`), reference exponent is `0`, real exponent is `0`
-- `a_1 = 0x1.004p-12`   reference exponent is `-12`, real exponent is `-12``
-- `b_1 = 0x1.004p-10`   reference exponent is `-10`, real exponent is `-10``
+For floating-point multiply operations, RVBNA supports all the rounding modes mandated by RISC-V **F** extension.
 
-`a_0 * b_0` reference exponent is `-14`, `a_1 * b_1` reference exponent is `-22`.
-`a_0 * b_0` appears as the greater product while it is not. 
+For integer operations, no rounding is required.
 
-the exact result is `0x1.40801p-22`.
+[#DotProdRTO]
+=== Rounding to Odd behavior in dot product mode
 
-When doing bulknormalization, `a_1 * b_1` is going to be right shifted and the least 4 significant bits will be jammed (as part of the product round-to-odd).
-If the proper maximum exponent was used, the result would have differed and no bit would have been discarded (even without the guard bit, there is enough room in the accumulator to accommodate an exact accumulation).
+Rounding to odd (RTO) is not part of the IEEE-754 standard (at least not until and including revision 2019).
 
-The result after bulknormalization is `0x1.4081p-22` with an error of `0x1p-39`. 
+The version used for the dot product operation admits two divergences with the generally accepted definition:
 
-Note:: Flushing subnormal inputs to zero would have made the result even worse since it would have discarded `a_0 * b_0` altogether since `a_0` is subnormal. In this case `a_0 * b_0` is larger than the discarded field from `a_1 * b_1`. If `a_0` is flushed to zero, the result would have been `0x1.00801p-22` with an error of `0x1p-24` (equal to `a_0 * b_0`).
+- When overflowing, an infinity result is returned (rather than the largest magnitude normal number) see <<#Overflow>>
+- A zero result is always positive (+0) whatever the sign of the actual zero term of the dot product sum
+
+
+=== Support for subnormal numbers
+
+RVBNA supports subnormal values for both inputs and outputs:
+
+- the subnormal inputs are not normalized before or after the product
+- the biased subnormal input exponent is fixed to `emin_normal` for each subnormal operand when computing the product reference exponent (used to evaluate `max_exp` and shift amounts)
+- the result is denormalized before the final round-to-odd is applied.
+
+[#ZeroBehavior]
+=== Behavior on floating-point zeros
+
+If the result of a dot product operation is zero, then `+0` is returned, even if `-0` would have been returned under IEEE 754 arithmetic.
+
+=== IEEE flags
+
+Under RVBNA, only the invalid operation and overflow exceptions can be raised.
+
+==== Invalid operation
+
+The invalid operation flag must be raised if at least one of the following conditions is met:
+
+- Any of the operands is a signaling NaN
+- At least one of the following conditions:
+**** there are at least two products that are infinites with opposite sign
+**** there is at least one product between a zero and an infinity
+
+Note:: a product is said to be infinite when it is the product between an infinity and a non-zero finite number.
+
+Note:: the invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
+
+[#Overflow]
+==== Overflow
+
+The overflow flag is raised according to the IEEE-754 definition:
+
+> The overflow exception shall be signaled if and only if the destination format’s largest finite number is exceeded in magnitude by what would have been the rounded floating-point result were the exponent range unbounded.
+
+The result returned in case of an overflow is infinity with the sign of the result with unbounded exponent. This diverges from a generally accepted definition of RTO (which rounds values exceeding the largest finite value to that extremum).
+
+Note:: In rounding-to-odd (RTO), it is equivalent to detect overflow before or after rounding as RTO rounding cannot make the significand overflow and force a late exponent change. This applies whatever the choice for the result returned in case of overflow.
