@@ -602,8 +602,6 @@ BulkNormalizedDotProduct(A[n], B[n]) {
 }
 ```
 
-Note:: For the 2D dot product, it is possible to choose the sign of the accumulator to be the sign of the smaller (magnitude) product if it differs from the sign of the larger product. This way, the larger product can be (bitwise) negated while the smaller product is aligned and rounded.
-
 Note:: In the current specification the most significant bit of the max product has a weight of `max_exp + 1`, which means that there are `q-2+g` fractional bits in the max product. `g` could be increased to `ceil(log2(n)) + 1` to ensure the number of fractional bits is at least `q-1` (identical to the output format). Numerical impacts of the value of `g` have not been evaluated. 
 
 Note:: Any one of the `2*p` bits of the max product can be the leading bit due to leading zeros in subnormal inputs. It is also possible for the maximum product to have more leading zeros than the other products (including when product alignment is taken into account). This is discussed in more detailed in the next section <<#RVBNAReferenceExponent>>.
