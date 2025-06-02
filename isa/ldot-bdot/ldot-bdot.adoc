@@ -407,15 +407,16 @@ Process each of these sets using the <<#RVBNA>>, using an output precision
 no less than that specified by the instruction.
 
 * Optionally, convert the resulting floating-point numbers to a precision
-no less than that specified by the instruction, rounding to odd.
+no less than that specified by the instruction, rounding to odd as described in
+<<#RVBNARTO>>.
 
 * Sum the resulting floating-point numbers
 in a manner consistent with the algorithm used by the `vfredusum.vs`
-instruction, rounding to odd, in a precision no less than the output precision
+instruction, rounding to odd as described in <<#RVBNARTO>>, in a precision no less than the output precision
 specified by the instruction.
 
 * Convert the scalar result to the instruction's output precision,
-rounding to odd.
+rounding to odd as described in <<#RVBNARTO>>.
 
 NOTE: The algorithm used by the `vfredusum.vs` offers several implementation
 choices.
