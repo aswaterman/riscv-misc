@@ -646,7 +646,7 @@ Rounding to odd (RTO) is not part of the IEEE-754 standard (at least not until a
 The version used for the dot product operation admits two divergences with the generally accepted definition:
 
 - When overflowing, an infinity result is returned (rather than the largest magnitude normal number) see <<#RVBNAOverflow>>
-- A zero result is always positive (+0) whatever the sign of the actual zero term of the dot product sum
+- A zero result is always positive (+0) whatever the sign of the actual zero term(s) of the dot product sum
 
 
 === Support for subnormal numbers
