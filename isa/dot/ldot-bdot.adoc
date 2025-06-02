@@ -126,7 +126,7 @@ products.
 Tail elements are substituted with the bit pattern of all zeros, then the
 computation is performed as though `vl`=VLMAX.
 
-image::zvmm-simple.svg[Static, pdfwidth=4in, title="Zvreddot operation, VLEN &#8804; 8*EEW"]
+image::bdot-simple.svg[Static, pdfwidth=4in, title="Zvreddot operation, VLEN &#8804; 8*EEW"]
 
 For long-vector implementations with VLEN > 8*EEW, each instruction also has
 a 3-bit scaled-by-8 immediate `ci` indicating which eight elements of `vd`
@@ -136,7 +136,7 @@ The instruction is reserved if `ci` {ge} `VLEN/(8*EEW)`.
 NOTE: The ability to use all of `vd` improves the efficiency of register-tiled
 matrix multiplication.
 
-image::zvmm-ci.svg[Static, pdfwidth=7in, title="Zvreddot operation, VLEN > 8*EEW"]
+image::bdot-ci.svg[Static, pdfwidth=7in, title="Zvreddot operation, VLEN > 8*EEW"]
 
 Each instruction is optionally masked by the `v0` mask register.
 If masked and the mask bit corresponding to the destination element in `vd` is clear,
@@ -416,7 +416,7 @@ For the two bottom products, some bits fall under the guard bit limits. For each
 
 [#RVBNAFig]
 .RISC-V Bulk Normalization Algorithm
-image::dotprod-bulknorm.svg[width=80%]
+image::rvbna.svg[width=80%]
 
 
 The following is a functional description of bulk normalization:

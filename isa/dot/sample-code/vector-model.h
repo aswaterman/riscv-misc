@@ -1,5 +1,5 @@
-#ifndef ZVMM_VECTOR_MODEL_H
-#define ZVMM_VECTOR_MODEL_H
+#ifndef ZVBDOT_VECTOR_MODEL_H
+#define ZVBDOT_VECTOR_MODEL_H
 
 // A model of the vector extension, so that target programs can be developed
 // on a non-RISC-V machine.

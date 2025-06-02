@@ -1,5 +1,5 @@
-#ifndef ZVMM_COMMON_H
-#define ZVMM_COMMON_H
+#ifndef ZVBDOT_COMMON_H
+#define ZVBDOT_COMMON_H
 
 #include <algorithm>
 #include <cassert>

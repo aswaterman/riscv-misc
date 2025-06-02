@@ -1,7 +1,7 @@
-#ifndef ZVMM_VECTOR_NATIVE_H
-#define ZVMM_VECTOR_NATIVE_H
+#ifndef ZVBDOT_VECTOR_NATIVE_H
+#define ZVBDOT_VECTOR_NATIVE_H
 
-// Support routines for V and Zvmm extensions.
+// Support routines for V and Zvbdot extensions.
 
 #include "common.h"
 
