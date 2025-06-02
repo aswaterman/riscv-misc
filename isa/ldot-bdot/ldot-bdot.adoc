@@ -674,12 +674,10 @@ The invalid operation flag must be raised if at least one of the following condi
 **** there are at least two products that are infinites with opposite sign.
 **** there is at least one product between a zero and an infinity.
 
+// comment to force next notes to be left aligned
+Note:: A product is said to be infinite when it is the product between an infinity and a non-zero finite number.
 
-
-Note:: a product is said to be infinite when it is the product between an infinity and a non-zero finite number.
-
-
-Note:: the invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
+Note:: The invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
 
 
 [#RVBNAOverflow]
