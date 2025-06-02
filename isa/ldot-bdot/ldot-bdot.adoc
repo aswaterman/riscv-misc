@@ -13,6 +13,15 @@ eight results.
 Both classes support a variety of data formats, including widening
 accumulations.
 
+NOTE: Some instructions in this proposal use the `vtype`.`altfmt` field,
+originally proposed as part of the Zvfbfa extension, to select the format
+of one or more of the operands.
+This approach helps conserve the limited 32-bit encoding space available
+to vector instructions.
+Because `altfmt` is written as a consequence of executing the `vsetvli`
+instruction needed for stripmine loop control, there is often no performance
+overhead to this approach.
+
 == `Zvldot` Family of Long Dot-Product Extensions, Version {dot-version}
 
 Each extension in the `Zvldot` family adds one or more instructions that
