@@ -400,13 +400,13 @@ respect to a common exponent, called the _maximum reference exponent_, or
 `max_exp`.
 Aligned products are rounded to an intermediate precision according to round-to-odd (RTO), then summed.
 The sum is then rounded to the target precision according to RTO, but unlike
-RTO, out-of-range values are rouned to infinity, instead of the largest
+RTO, out-of-range values are rounded to infinity, instead of the largest
 representable number.
 
 Formally, bulk normalization is characterized by multiple parameters:
 
 - `p`: the size of each factor's significand (significand product is `2p`-bit wide, signed product is `2p+1`-bit wide)
-- `e`: the size of each factor's biased exponent` (the bias is `2^(e-1) - 1`)
+- `e`: the size of each factor's biased exponent (the bias is `2^(e-1) - 1`)
 - `q`: the size of the result's significand
 - `f`: the size of the result's biased exponent (the bias is `2^(f-1) - 1`)
 - `n`: the number of products accumulated
@@ -646,7 +646,7 @@ Rounding to odd (RTO) is not part of the IEEE-754 standard (at least not until a
 The version used for the dot product operation admits two divergences with the generally accepted definition:
 
 - When overflowing, an infinity result is returned (rather than the largest magnitude normal number) see <<#RVBNAOverflow>>
-- A zero result is always positive (+0) whatever the sign of the actual zero term of the dot product sum
+- A zero result is always positive (+0) whatever the sign of the actual zero term(s) of the dot product sum
 
 
 === Support for subnormal numbers
@@ -671,12 +671,14 @@ The invalid operation flag must be raised if at least one of the following condi
 
 - Any of the operands is a signaling NaN
 - At least one of the following conditions:
-**** there are at least two products that are infinites with opposite sign
-**** there is at least one product between a zero and an infinity
+**** there are at least two products that are infinites with opposite sign.
+**** there is at least one product between a zero and an infinity.
 
-Note:: a product is said to be infinite when it is the product between an infinity and a non-zero finite number.
+// comment to force next notes to be left aligned
+Note:: A product is said to be infinite when it is the product between an infinity and a non-zero finite number.
 
-Note:: the invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
+Note:: The invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
+
 
 [#RVBNAOverflow]
 ==== Overflow
