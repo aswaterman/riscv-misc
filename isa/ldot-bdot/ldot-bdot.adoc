@@ -400,7 +400,7 @@ respect to a common exponent, called the _maximum reference exponent_, or
 `max_exp`.
 Aligned products are rounded to an intermediate precision according to round-to-odd (RTO), then summed.
 The sum is then rounded to the target precision according to RTO, but unlike
-RTO, out-of-range values are rouned to infinity, instead of the largest
+RTO, out-of-range values are rounded to infinity, instead of the largest
 representable number.
 
 Formally, bulk normalization is characterized by multiple parameters:
