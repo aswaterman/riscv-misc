@@ -410,10 +410,10 @@ no less than that specified by the instruction.
 no less than that specified by the instruction, rounding to odd as described in
 <<#RVBNARTO>>.
 
-* Sum the resulting floating-point numbers
+* Sum the resulting floating-point numbers and the accumulator input
 in a manner consistent with the algorithm used by the `vfredusum.vs`
-instruction, rounding to odd as described in <<#RVBNARTO>>, in a precision no less than the output precision
-specified by the instruction.
+instruction, rounding to odd as described in <<#RVBNARTO>>, in a precision no
+less than the output precision specified by the instruction.
 
 * Convert the scalar result to the instruction's output precision,
 rounding to odd as described in <<#RVBNARTO>>.
