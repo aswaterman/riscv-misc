@@ -112,7 +112,7 @@ and with funct6=0x26 for `vfqldot.vv` and funct6=0x27 for
 
 == `Zvbdot` Family of Batched Dot-Product Extensions, Version {dot-version}
 
-Batched dot product instructions compute up to eight dot products at a time.
+Batched dot-product instructions compute up to eight dot products at a time.
 Each instruction in these extensions treats `vs1` as an EMUL=1 vector register
 group and `vs2` as an EMUL=8 vector register group, computing eight independent
 dot products between `vs1` and each of the eight vector registers within `vs2`.
