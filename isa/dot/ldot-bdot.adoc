@@ -22,7 +22,7 @@ compute a dot product between two vector register groups, identified by
 
 NOTE: The name "long dot product" was chosen to distinguish these instructions
 from those in the `Zvqdotq` extension, which compute multiple fixed-length
-dot products, as opposed to one long dot product.
+dot products, as opposed to one VLMAX-element product.
 
 The `vs2` and `vs1` register groups have EMUL=LMUL and EEW=SEW.
 The `vd` register always has EMUL=1; its EEW depends on the instruction.
@@ -84,10 +84,10 @@ The `vfwldot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and f
 NOTE: A future extension could define an instruction that uses the same code
 points with `vtype`.`altfmt`=0 to compute IEEE 754 FP16 dot products.
 
-=== `Zvfqldot8mxf` BF16 Dot-Product Extension, Version {dot-version}
+=== `Zvfqldot8f` OCP FP8 Dot-Product Extension, Version {dot-version}
 
-The Zvfqldot8mxf extension adds two instructions, each of which computes a dot
-product between two OCP MX FP8 vectors, accumulating into an FP32 scalar.
+The Zvfqldot8f extension adds two instructions, each of which computes a dot
+product between two OCP FP8 vectors, accumulating into an FP32 scalar.
 The `vfqldot.vv` instruction treats the `vs2` operand as E4M3 numbers,
 whereas the `vfqldot.alt.vv` instruction treats the `vs2` operand
 as E5M2 numbers.
@@ -97,7 +97,7 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvfqldot8mxf 8-bit integer dot product instructions
+# Zvfqldot8f 8-bit integer dot product instructions
 # format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
 vfqldot.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
 vfqldot.alt.vv vd, vs2, rs1, vm   # vd[0] += E5M2(vs2) dot vs1
@@ -206,10 +206,10 @@ Section <<#RVBNA>>.
 
 The `vfwbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
 
-=== `Zvfqbdot8mxf` OCP MX Batched Dot-Product Extension
+=== `Zvfqbdot8f` OCP FP8 Batched Dot-Product Extension
 
-The Zvfqbdot8mxf extension adds instructions that perform 1x8xVL matrix
-multiply-accumulate operations on 8-bit OCP MX multiplicands, accumulating
+The Zvfqbdot8f extension adds instructions that perform 1x8xVL matrix
+multiply-accumulate operations on 8-bit OCP FP8 multiplicands, accumulating
 into FP32.
 The `vfqbdot.vv` instruction treats the `vs2` operand as E4M3 numbers,
 whereas the `vfqbdot.alt.vv` instruction treats the `vs2` operand
