@@ -406,7 +406,7 @@ representable number.
 Formally, bulk normalization is characterized by multiple parameters:
 
 - `p`: the size of each factor's significand (significand product is `2p`-bit wide, signed product is `2p+1`-bit wide)
-- `e`: the size of each factor's biased exponent` (the bias is `2^(e-1) - 1`)
+- `e`: the size of each factor's biased exponent (the bias is `2^(e-1) - 1`)
 - `q`: the size of the result's significand
 - `f`: the size of the result's biased exponent (the bias is `2^(f-1) - 1`)
 - `n`: the number of products accumulated
