@@ -8,7 +8,7 @@ This document describes several extensions that accelerate the computation
 of Euclidean inner products, a.k.a. dot products.
 The extensions fall into two classes: _long_ dot products between two vectors,
 producing a scalar result; and _batched_ dot products, wherein one vector is
-broadcast to eight vectors to perform eight dot produts, producing a vector of
+broadcast to eight vectors to perform eight dot products, producing a vector of
 eight results.
 Both classes support a variety of data formats, including widening
 accumulations.
