@@ -172,9 +172,8 @@ row of the A matrix at a time.
 
 === `Zvqbdot8i` 8-bit Integer Batched Dot-Product Extension
 
-The Zvqbdot8i extension adds instructions that perform 1x8xVL matrix
-multiply-accumulate operations on 8-bit integer multiplicands, accumulating
-into 32-bit integers.
+The Zvqbdot8i extension adds instructions that perform batched dot-product
+operations on 8-bit integer vectors, accumulating into 32-bit integers.
 The `vqbdotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
 integers, whereas the `vqbdots.vv` instruction treats the `vs2` operand
 as signed 8-bit integers.
@@ -199,9 +198,8 @@ and with funct6=0x2e for `vqbdotu.vv` and funct6=0x2f for
 
 === `Zvfwbdot16bf` BF16 Batched Dot-Product Extension
 
-The Zvfwbdot16bf extension adds one instruction, `vfwbdot.vv`, which
-performs a 1x8xVL matrix multiply-accumulate on BF16 multiplicands and an FP32
-accumulator.
+The Zvfwbdot16bf extension adds one instruction, `vfwbdot.vv`, which performs
+a batched dot-product operation on BF16 vectors, accumulating into FP32.
 The instruction is reserved unless SEW=16, LMUL=1, and `vtype`.`altfmt`=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=2*SEW.
@@ -219,9 +217,8 @@ The `vfwbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and f
 
 === `Zvfqbdot8f` OCP FP8 Batched Dot-Product Extension
 
-The Zvfqbdot8f extension adds instructions that perform 1x8xVL matrix
-multiply-accumulate operations on 8-bit OCP FP8 multiplicands, accumulating
-into FP32.
+The Zvfqbdot8f extension adds instructions that perform batched dot-product
+operations on 8-bit OCP FP8 vectors, accumulating into FP32.
 The `vfqbdot.vv` instruction treats the `vs2` operand as E4M3 numbers,
 whereas the `vfqbdot.alt.vv` instruction treats the `vs2` operand
 as E5M2 numbers.
@@ -248,7 +245,7 @@ and with funct6=0x2e for `vfqbdot.vv` and funct6=0x2f for
 === `Zvfbdot32f` FP32 Batched Dot-Product Extension
 
 The Zvfbdot32f extension adds one instruction, `vfbdot.vv`, which performs
-a 1x8xVL matrix multiply-accumulate on FP32 multiplicands and an FP32 accumulator.
+a batched dot-product operation on FP32 vectors, accumulating into FP32.
 The instruction is reserved unless SEW=32 and LMUL=1.
 The `vs1`, `vs2`, and `vd` operands all have EEW=SEW.
 
