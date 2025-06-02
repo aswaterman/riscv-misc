@@ -28,9 +28,6 @@ The `vs2` and `vs1` register groups have EMUL=LMUL and EEW=SEW.
 The `vd` register always has EMUL=1; its EEW depends on the instruction.
 
 These instructions are maskable.
-Inactive elements are substituted with the bit pattern of all zeros, then the
-computation is performed as though the instruction were not masked and
-`vl`=VLMAX.
 
 These instructions always report exceptions with a `vstart` of 0;
 executing one with a nonzero `vstart` is reserved.
@@ -77,7 +74,7 @@ vfwldot.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
 ----
 
 These dot products are computed using the bulk-normalization scheme defined in
-Section <<#RVBNA>>.
+Section <<#DPBulkNorm>>.
 
 The `vfwldot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x24.
 
@@ -104,7 +101,7 @@ vfqldot.alt.vv vd, vs2, rs1, vm   # vd[0] += E5M2(vs2) dot vs1
 ----
 
 These dot products are computed using the bulk-normalization scheme defined in
-Section <<#RVBNA>>.
+Section <<#DPBulkNorm>>.
 
 The instructions are encoded in major opcode 0x77 with funct3=1,
 and with funct6=0x26 for `vfqldot.vv` and funct6=0x27 for
@@ -211,7 +208,7 @@ vfwbdot.vv vd, vs2, vs1, vm
 ----
 
 Each dot product is computed using the bulk-normalization scheme defined in
-Section <<#RVBNA>>.
+Section <<#DPBulkNorm>>.
 
 The `vfwbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
 
@@ -236,7 +233,7 @@ vfqbdot.alt.vv vd, vs2, rs1, vm   # vs2 E5M2
 ----
 
 Each dot product is computed using the bulk-normalization scheme defined in
-Section <<#RVBNA>>.
+Section <<#DPBulkNorm>>.
 
 The instructions are encoded in major opcode 0x77 with funct3=1,
 and with funct6=0x2e for `vfqbdot.vv` and funct6=0x2f for
@@ -261,6 +258,11 @@ The sum of these dot products and the accumulator must be as though computed by 
 
 NOTE: This formulation allows significant implementation flexibility while being sufficiently
 precise to implement SGEMM.
+
+NOTE: The algorithm used by the `vfredusum.vs` offers several implementation
+choices.
+Implementations are not required to use the same algorithm configuration for
+the `vfbdot.vv` instruction as for the `vfredusum.vs` instruction.
 
 The `vfbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2b.
 
@@ -384,6 +386,41 @@ loop:
   add t1, t1, t3
   bnez a0, loop
 ```
+
+[#DPBulkNorm]
+== Bulk Normalization of Dot Products
+
+Some of the dot-product instructions allow the intermediate products to be
+bulk-normalized to improve efficiency.
+This section describes the algorithm and permissible options.
+
+* When `vl` < VLMAX, inactive and tail source elements are substituted with
+the bit pattern of all zeros, then the computation as performed as though
+`vl`=VLMAX.
+
+* Either of the following algorithms for pairwise multiplication is used:
+
+** The exact product of each multiplicand pair is computed.
+** The VLMAX multiplicand pairs are partitioned into an implementation-defined
+number of sets; the elements within each set are not necessarily consecutive.
+Each of these sets is processed using the <<#RVBNA>>, using an output precision
+no less than that specified by the instruction.
+
+* The resulting floating-point numbers are optionally converted to a precision
+no less than that specified by the instruction, rounding to odd.
+
+* The resulting floating-point numbers are
+summed in a manner consistent with the algorithm used by the `vfredusum.vs`
+instruction, rounding to odd, in a precision no less than the output precision
+specified by the instruction.
+
+* The scalar result is converted to the instruction's output precision,
+rounding to odd.
+
+NOTE: The algorithm used by the `vfredusum.vs` offers several implementation
+choices.
+Implementations are not required to use the same algorithm configuration for
+batched dot products as for the `vfredusum.vs` instruction.
 
 [#RVBNA]
 == RISC-V Bulk Normalization Algorithm
