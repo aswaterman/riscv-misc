@@ -51,7 +51,7 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvqldot8i 8-bit integer dot product instructions
+# Zvqldot8i 8-bit integer long dot-product instructions
 # signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
 vqldotu.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
 vqldots.vv vd, vs2, rs1, vm   # vd[0] += signed(vs2) dot vs1
@@ -71,7 +71,7 @@ The instruction is reserved unless `vtype`.`altfmt`=1 and SEW=16.
 The `vd` operand has EEW=2*SEW.
 
 ----
-# Zvfwldot16bf BF16 dot product instruction
+# Zvfwldot16bf BF16 long dot-product instruction
 # altfmt=1
 vfwldot.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
 ----
@@ -97,7 +97,7 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvfqldot8f 8-bit integer dot product instructions
+# Zvfqldot8f OCP FP8 long dot-product instructions
 # format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
 vfqldot.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
 vfqldot.alt.vv vd, vs2, rs1, vm   # vd[0] += E5M2(vs2) dot vs1
@@ -119,14 +119,12 @@ dot products between `vs1` and each of the eight vector registers within `vs2`.
 The vector of eight results is accumulated into `vd`, an EMUL=`ceil(8*EEW/VLEN)`
 vector register group.
 
-These instructions are reserved unless LMUL=1.
-
 The vector-length register `vl` sets the length of each of the eight dot
 products.
 Tail elements are substituted with the bit pattern of all zeros, then the
 computation is performed as though `vl`=VLMAX.
 
-image::bdot-simple.svg[Static, pdfwidth=4in, title="Zvreddot operation, VLEN &#8804; 8*EEW"]
+image::bdot-simple.svg[Static, pdfwidth=4in, title="Zvbdot operation, VLEN &#8804; 8*EEW"]
 
 For long-vector implementations with VLEN > 8*EEW, each instruction also has
 a 3-bit scaled-by-8 immediate `ci` indicating which eight elements of `vd`
@@ -136,7 +134,7 @@ The instruction is reserved if `ci` {ge} `VLEN/(8*EEW)`.
 NOTE: The ability to use all of `vd` improves the efficiency of register-tiled
 matrix multiplication.
 
-image::bdot-ci.svg[Static, pdfwidth=7in, title="Zvreddot operation, VLEN > 8*EEW"]
+image::bdot-ci.svg[Static, pdfwidth=7in, title="Zvbdot operation, VLEN > 8*EEW"]
 
 Each instruction is optionally masked by the `v0` mask register.
 If masked and the mask bit corresponding to the destination element in `vd` is clear,
@@ -186,6 +184,13 @@ These instructions are reserved unless SEW=8 and LMUL=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
+----
+# Zvqbdot8i 8-bit integer batched dot-product instructions
+# signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
+vqbdotu.vv vd, vs2, vs1, vm   # vs2 unsigned
+vqbdots.vv vd, vs2, rs1, vm   # vs2 signed
+----
+
 Each dot product is computed modulo 2^32^; overflow is ignored.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
@@ -200,6 +205,12 @@ accumulator.
 The instruction is reserved unless SEW=16, LMUL=1, and `vtype`.`altfmt`=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=2*SEW.
+
+----
+# Zvfwbdot16bf BF16 batched dot-product instruction
+# altfmt=1
+vfwbdot.vv vd, vs2, vs1, vm
+----
 
 Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#RVBNA>>.
@@ -220,6 +231,13 @@ These instructions are reserved unless SEW=8 and LMUL=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
+----
+# Zvfqbdot8f OCP FP8 batched dot-product instructions
+# format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
+vfqbdot.vv     vd, vs2, vs1, vm   # vs2 E4M3
+vfqbdot.alt.vv vd, vs2, rs1, vm   # vs2 E5M2
+----
+
 Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#RVBNA>>.
 
@@ -233,6 +251,11 @@ The Zvfbdot32f extension adds one instruction, `vfbdot.vv`, which performs
 a 1x8xVL matrix multiply-accumulate on FP32 multiplicands and an FP32 accumulator.
 The instruction is reserved unless SEW=32 and LMUL=1.
 The `vs1`, `vs2`, and `vd` operands all have EEW=SEW.
+
+----
+# Zvfbdot32f FP32 batched dot-product instruction
+vfbdot.vv vd, vs2, vs1, vm
+----
 
 The intermediate FP32 products may either be kept in full precision or may be rounded
 to FP32 according to the dynamic rounding mode.
