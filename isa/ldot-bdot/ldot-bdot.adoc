@@ -394,27 +394,27 @@ Some of the dot-product instructions allow the intermediate products to be
 bulk-normalized to improve efficiency.
 This section describes the algorithm and permissible options.
 
-* When `vl` < VLMAX, inactive and tail source elements are substituted with
-the bit pattern of all zeros, then the computation as performed as though
-`vl`=VLMAX.
+* Substitute any inactive and tail source elements with the bit pattern
+of all zeros, and perform the following steps as though `vl`=VLMAX.
 
-* Either of the following algorithms for pairwise multiplication is used:
+* Perform either of the following actions:
 
-** The exact product of each multiplicand pair is computed.
-** The VLMAX multiplicand pairs are partitioned into an implementation-defined
-number of sets; the elements within each set are not necessarily consecutive.
-Each of these sets is processed using the <<#RVBNA>>, using an output precision
+** Compute the exact product of each of the VLMAX multiplicand pairs.
+** Partition the VLMAX multiplicand pairs into an implementation-defined
+number of equal-sized sets; the elements within each set are not necessarily
+consecutive.
+Process each of these sets using the <<#RVBNA>>, using an output precision
 no less than that specified by the instruction.
 
-* The resulting floating-point numbers are optionally converted to a precision
+* Optionally, convert the resulting floating-point numbers to a precision
 no less than that specified by the instruction, rounding to odd.
 
-* The resulting floating-point numbers are
-summed in a manner consistent with the algorithm used by the `vfredusum.vs`
+* Sum the resulting floating-point numbers
+in a manner consistent with the algorithm used by the `vfredusum.vs`
 instruction, rounding to odd, in a precision no less than the output precision
 specified by the instruction.
 
-* The scalar result is converted to the instruction's output precision,
+* Convert the scalar result to the instruction's output precision,
 rounding to odd.
 
 NOTE: The algorithm used by the `vfredusum.vs` offers several implementation
