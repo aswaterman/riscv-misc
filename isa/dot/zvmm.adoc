@@ -57,7 +57,7 @@ vqldotu.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
 vqldots.vv vd, vs2, rs1, vm   # vd[0] += signed(vs2) dot vs1
 ----
 
-These dot products are computed mod 2^32^; overflow is ignored.
+These dot products are computed modulo 2^32^; overflow is ignored.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x26 for `vqldotu.vv` and funct6=0x27 for
@@ -172,13 +172,13 @@ The M dimension has no fringe cases, since these instructions only process one
 row of the A matrix at a time.
 ====
 
-== `Zvreddot32a8i` 8-bit Integer Integrated Matrix Extension
+=== `Zvqbdot8i` 8-bit Integer Batched Dot-Product Extension
 
-The Zvreddot32a8i extension adds instructions that perform 1x8xVL matrix
+The Zvqbdot8i extension adds instructions that perform 1x8xVL matrix
 multiply-accumulate operations on 8-bit integer multiplicands, accumulating
 into 32-bit integers.
-The `vqmmacc.u.vv` instruction treats the `vs2` operand as unsigned 8-bit
-integers, whereas the `vqmmacc.s.vv` instruction treats the `vs2` operand
+The `vqbdotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
+integers, whereas the `vqbdots.vv` instruction treats the `vs2` operand
 as signed 8-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
@@ -186,49 +186,15 @@ These instructions are reserved unless SEW=8 and LMUL=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
-Each dot product is computed modulo 2^32^.
-
-```
-vqmmacc.u.vv vd, vs2, vs1, ci, vm
-```
-
-```wavedrom
-{reg: [
-  {bits: 7, name: 0x77},
-  {bits: 5, name: 'vd'},
-  {bits: 3, name: 0},
-  {bits: 5, name: 'vs1'},
-  {bits: 3, name: 'ci'},
-  {bits: 2, name: 'vs2'},
-  {bits: 1, name: 'vm'},
-  {bits: 6, name: '101110'},
-]}
-```
-
-```
-vqmmacc.s.vv vd, vs2, vs1, ci, vm
-```
-
-```wavedrom
-{reg: [
-  {bits: 7, name: 0x77},
-  {bits: 5, name: 'vd'},
-  {bits: 3, name: 0},
-  {bits: 5, name: 'vs1'},
-  {bits: 3, name: 'ci'},
-  {bits: 2, name: 'vs2'},
-  {bits: 1, name: 'vm'},
-  {bits: 6, name: '101111'},
-]}
-```
+Each dot product is computed modulo 2^32^; overflow is ignored.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x2e for `vqbdotu.vv` and funct6=0x2f for
 `vqbdots.vv`.
 
-== `Zvreddot32a16bf` BF16 Integrated Matrix Extension
+=== `Zvfwbdot16bf` BF16 Batched Dot-Product Extension
 
-The Zvreddot32a16bf extension adds one instruction, `vfwmmacc.vv`, which
+The Zvfwbdot16bf extension adds one instruction, `vfwbdot.vv`, which
 performs a 1x8xVL matrix multiply-accumulate on BF16 multiplicands and an FP32
 accumulator.
 The instruction is reserved unless SEW=16, LMUL=1, and `vtype`.`altfmt`=1.
@@ -238,45 +204,15 @@ EEW=2*SEW.
 Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#RVBNA>>.
 
-NOTE: Informally, the product exponents are approximated by summing the
-multiplicand exponents, modulo the bias.
-For the accumulator input, the approximate exponent is its actual exponent.
-The maximum of these approximate exponents is then computed.
-Each summand's normalization distance is then computed by subtracting its
-approximate exponent from the maximum.
-Each summand is then normalized by this distance, rounding to odd.
-These fixed-point summands are then added, and the final sum is converted to
-the destination format, rounding to odd.
-
-NOTE: Because most of the accumulation occurs using fixed-point carry-save arithmetic,
-mandating this scheme still offers some degree of implementation flexibility.
-
-```
-vfwmmacc.vv vd, vs2, vs1, ci, vm
-```
-
-```wavedrom
-{reg: [
-  {bits: 7, name: 0x77},
-  {bits: 5, name: 'vd'},
-  {bits: 3, name: 1},
-  {bits: 5, name: 'vs1'},
-  {bits: 3, name: 'ci'},
-  {bits: 2, name: 'vs2'},
-  {bits: 1, name: 'vm'},
-  {bits: 6, name: '101100'},
-]}
-```
-
 The `vfwbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
 
-== `Zvreddot32a8mxf` OCP MX Integrated Matrix Extension
+=== `Zvfqbdot8mxf` OCP MX Batched Dot-Product Extension
 
-The Zvreddot32a8mxf extension adds instructions that perform 1x8xVL matrix
+The Zvfqbdot8mxf extension adds instructions that perform 1x8xVL matrix
 multiply-accumulate operations on 8-bit OCP MX multiplicands, accumulating
 into FP32.
-The `vfqmmacc.vv` instruction treats the `vs2` operand as E4M3 numbers,
-whereas the `vfqmmacc.alt.vv` instruction treats the `vs2` operand
+The `vfqbdot.vv` instruction treats the `vs2` operand as E4M3 numbers,
+whereas the `vfqbdot.alt.vv` instruction treats the `vs2` operand
 as E5M2 numbers.
 The `vtype`.`altfmt` field selects the datatype of the `vs1` operand,
 with 0 indicating E4M3 and 1 indicating E5M2.
@@ -287,47 +223,13 @@ EEW=4*SEW.
 Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#RVBNA>>.
 
-```
-vfqmmacc.vv vd, vs2, vs1, ci, vm
-```
-
-```wavedrom
-{reg: [
-  {bits: 7, name: 0x77},
-  {bits: 5, name: 'vd'},
-  {bits: 3, name: 1},
-  {bits: 5, name: 'vs1'},
-  {bits: 3, name: 'ci'},
-  {bits: 2, name: 'vs2'},
-  {bits: 1, name: 'vm'},
-  {bits: 6, name: '101110'},
-]}
-```
-
-```
-vfqmmacc.alt.vv vd, vs2, vs1, ci, vm
-```
-
-```wavedrom
-{reg: [
-  {bits: 7, name: 0x77},
-  {bits: 5, name: 'vd'},
-  {bits: 3, name: 1},
-  {bits: 5, name: 'vs1'},
-  {bits: 3, name: 'ci'},
-  {bits: 2, name: 'vs2'},
-  {bits: 1, name: 'vm'},
-  {bits: 6, name: '101111'},
-]}
-```
-
 The instructions are encoded in major opcode 0x77 with funct3=1,
 and with funct6=0x2e for `vfqbdot.vv` and funct6=0x2f for
 `vfqbdot.alt.vv`.
 
-== `Zvreddot32a32f` FP32 Integrated Matrix Extension
+=== `Zvfbdot32f` FP32 Batched Dot-Product Extension
 
-The Zvreddot32a32f extension adds one instruction, `vfmmacc.vv`, which performs
+The Zvfbdot32f extension adds one instruction, `vfbdot.vv`, which performs
 a 1x8xVL matrix multiply-accumulate on FP32 multiplicands and an FP32 accumulator.
 The instruction is reserved unless SEW=32 and LMUL=1.
 The `vs1`, `vs2`, and `vd` operands all have EEW=SEW.
@@ -340,24 +242,9 @@ The sum of these dot products and the accumulator must be as though computed by 
 NOTE: This formulation allows significant implementation flexibility while being sufficiently
 precise to implement SGEMM.
 
-```
-vfmmacc.vv vd, vs2, vs1, ci, vm
-```
+The `vfbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2b.
 
-```wavedrom
-{reg: [
-  {bits: 7, name: 0x77},
-  {bits: 5, name: 'vd'},
-  {bits: 3, name: 1},
-  {bits: 5, name: 'vs1'},
-  {bits: 3, name: 'ci'},
-  {bits: 2, name: 'vs2'},
-  {bits: 1, name: 'vm'},
-  {bits: 6, name: '101011'},
-]}
-```
-
-== Sample code
+=== Sample matrix-multiplication code
 
 Following is an optimized inner loop for 8-bit signed integer matrix
 multiplication, accumulating into 32-bit integers, for row-major A and C and
@@ -409,68 +296,68 @@ loop:
   # Load 1 row of A into v31; macc into v16
   add a6, a1, t1
   vle8.v v31, (a6)
-  vqmmacc.s.vv v16, v31, v0, 0
-  vqmmacc.s.vv v16, v31, v8, 8
+  vqbdots.vv v16, v31, v0, 0
+  vqbdots.vv v16, v31, v8, 8
 
   # Load 1 row of A into v31; macc into v17
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v17, v31, v0, 0
-  vqmmacc.s.vv v17, v31, v8, 8
+  vqbdots.vv v17, v31, v0, 0
+  vqbdots.vv v17, v31, v8, 8
 
   # etc., total of 15 times
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v18, v31, v0, 0
-  vqmmacc.s.vv v18, v31, v8, 8
+  vqbdots.vv v18, v31, v0, 0
+  vqbdots.vv v18, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v19, v31, v0, 0
-  vqmmacc.s.vv v19, v31, v8, 8
+  vqbdots.vv v19, v31, v0, 0
+  vqbdots.vv v19, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v20, v31, v0, 0
-  vqmmacc.s.vv v20, v31, v8, 8
+  vqbdots.vv v20, v31, v0, 0
+  vqbdots.vv v20, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v21, v31, v0, 0
-  vqmmacc.s.vv v21, v31, v8, 8
+  vqbdots.vv v21, v31, v0, 0
+  vqbdots.vv v21, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v22, v31, v0, 0
-  vqmmacc.s.vv v22, v31, v8, 8
+  vqbdots.vv v22, v31, v0, 0
+  vqbdots.vv v22, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v23, v31, v0, 0
-  vqmmacc.s.vv v23, v31, v8, 8
+  vqbdots.vv v23, v31, v0, 0
+  vqbdots.vv v23, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v24, v31, v0, 0
-  vqmmacc.s.vv v24, v31, v8, 8
+  vqbdots.vv v24, v31, v0, 0
+  vqbdots.vv v24, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v25, v31, v0, 0
-  vqmmacc.s.vv v25, v31, v8, 8
+  vqbdots.vv v25, v31, v0, 0
+  vqbdots.vv v25, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v26, v31, v0, 0
-  vqmmacc.s.vv v26, v31, v8, 8
+  vqbdots.vv v26, v31, v0, 0
+  vqbdots.vv v26, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v27, v31, v0, 0
-  vqmmacc.s.vv v27, v31, v8, 8
+  vqbdots.vv v27, v31, v0, 0
+  vqbdots.vv v27, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v28, v31, v0, 0
-  vqmmacc.s.vv v28, v31, v8, 8
+  vqbdots.vv v28, v31, v0, 0
+  vqbdots.vv v28, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v29, v31, v0, 0
-  vqmmacc.s.vv v29, v31, v8, 8
+  vqbdots.vv v29, v31, v0, 0
+  vqbdots.vv v29, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqmmacc.s.vv v30, v31, v0, 0
-  vqmmacc.s.vv v30, v31, v8, 8
+  vqbdots.vv v30, v31, v0, 0
+  vqbdots.vv v30, v31, v8, 8
 
   # repeat until K dimension exhausted
   sub a0, a0, t3
@@ -513,7 +400,7 @@ The number of guard bits, `g`, is also defined to be `ceil(log2(n))`.
 Informally, RVBNA works as follows:
 
 - Computing maximum exponent `max_exp`:
-**** Computing each product and the addend **reference exponent** (details in <<#ReferenceExponent>>)
+**** Computing each product and the addend **reference exponent** (details in <<#RVBNAReferenceExponent>>)
 **** Computing `max_exp`, the maximum of the **reference exponents**
 - Aligning product magnitudes on `max_exp` (2 integer bits and `2*p-2` fractional bits)
 **** Each product is extended to `q-1+g` fractional bits (right padding of `(q-1+g) - (2*p-2)` zeros)
@@ -524,10 +411,10 @@ Informally, RVBNA works as follows:
 - Normalizing/Denormalizing the result and round it to odd to binary32 mantissa `M`, computing the result exponent, `E`
 - Building output result from `S`, `E`, and `M`
 
-Bulk Normalization is illustrated by Figure <<#BulkNorm>>. 4 products are aligned.
+Bulk Normalization is illustrated by Figure <<#RVBNAFig>>. 4 products are aligned.
 For the two bottom products, some bits fall under the guard bit limits. For each product those bits are OR-ed into the least significant guard bit.
 
-[#BulkNorm]
+[#RVBNAFig]
 .RISC-V Bulk Normalization Algorithm
 image::dotprod-bulknorm.svg[width=80%]
 
@@ -699,9 +586,9 @@ Note:: For the 2D dot product, it is possible to choose the sign of the accumula
 
 Note:: In the current specification the most significant bit of the max product has a weight of `max_exp + 1`, which means that there are `q-2+g` fractional bits in the max product. `g` could be increased to `ceil(log2(n)) + 1` to ensure the number of fractional bits is at least `q-1` (identical to the output format). Numerical impacts of the value of `g` have not been evaluated. 
 
-Note:: Any one of the `2*p` bits of the max product can be the leading bit due to leading zeros in subnormal inputs. It is also possible for the maximum product to have more leading zeros than the other products (including when product alignment is taken into account). This is discussed in more detailed in the next section <<#ReferenceExponent>>.
+Note:: Any one of the `2*p` bits of the max product can be the leading bit due to leading zeros in subnormal inputs. It is also possible for the maximum product to have more leading zeros than the other products (including when product alignment is taken into account). This is discussed in more detailed in the next section <<#RVBNAReferenceExponent>>.
 
-[#ReferenceExponent]
+[#RVBNAReferenceExponent]
 ==== Reference Exponent
 
 The **reference exponent** is a proxy to the product exponent used to determine the largest product and to align the smaller products with respect to it.
@@ -725,20 +612,20 @@ Note:: The **reference exponent** may differ from the product exponent (with the
 
 === Rounding modes
 
-For floating-point dot product operations, RVBNA only supports rounding-to-odd (RTO) with some specificites (see <<#DotProdRTO>>).
+For floating-point dot product operations, RVBNA only supports rounding-to-odd (RTO) with some specificites (see <<#RVBNARTO>>).
 
 For floating-point multiply operations, RVBNA supports all the rounding modes mandated by RISC-V **F** extension.
 
 For integer operations, no rounding is required.
 
-[#DotProdRTO]
+[#RVBNARTO]
 === Rounding to Odd behavior in dot product mode
 
 Rounding to odd (RTO) is not part of the IEEE-754 standard (at least not until and including revision 2019).
 
 The version used for the dot product operation admits two divergences with the generally accepted definition:
 
-- When overflowing, an infinity result is returned (rather than the largest magnitude normal number) see <<#Overflow>>
+- When overflowing, an infinity result is returned (rather than the largest magnitude normal number) see <<#RVBNAOverflow>>
 - A zero result is always positive (+0) whatever the sign of the actual zero term of the dot product sum
 
 
@@ -750,7 +637,6 @@ RVBNA supports subnormal values for both inputs and outputs:
 - the biased subnormal input exponent is fixed to `emin_normal` for each subnormal operand when computing the product reference exponent (used to evaluate `max_exp` and shift amounts)
 - the result is denormalized before the final round-to-odd is applied.
 
-[#ZeroBehavior]
 === Behavior on floating-point zeros
 
 If the result of a dot product operation is zero, then `+0` is returned, even if `-0` would have been returned under IEEE 754 arithmetic.
@@ -772,7 +658,7 @@ Note:: a product is said to be infinite when it is the product between an infini
 
 Note:: the invalid exception flag can be raised even if one of the operands is a quiet NaN (for example with `inf - inf + qNaN`, or `inf * 0 + qNaN`)
 
-[#Overflow]
+[#RVBNAOverflow]
 ==== Overflow
 
 The overflow flag is raised according to the IEEE-754 definition:
