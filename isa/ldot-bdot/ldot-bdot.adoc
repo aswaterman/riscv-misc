@@ -69,6 +69,22 @@ The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x26 for `vqldotu.vv` and funct6=0x27 for
 `vqldots.vv`.
 
+=== `Zvqldot16i` 16-bit Integer Dot-Product Extension, Version {dot-version}
+
+The Zvqldot16i extension adds two instructions, each of which computes a dot
+product between two 16-bit integer vectors, accumulating into a 64-bit scalar.
+The `vqldotu.vv` instruction treats the `vs2` operand as unsigned 16-bit
+integers, whereas the `vqldots.vv` instruction treats the `vs2` operand
+as signed 16-bit integers.
+The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
+with 0 indicating unsigned and 1 indicating signed.
+These instructions use the same encodings as those defined in the Zvqldot8i
+extension.
+These instructions are reserved unless SEW=16.
+The `vd` operand has EEW=4*SEW.
+
+These dot products are computed modulo 2^64^; overflow is ignored.
+
 === `Zvfwldot16bf` BF16 Dot-Product Extension, Version {dot-version}
 
 The Zvfwldot16bf extension adds one instruction, `vfwldot.vv`, which computes
@@ -201,6 +217,23 @@ Each dot product is computed modulo 2^32^; overflow is ignored.
 The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x2e for `vqbdotu.vv` and funct6=0x2f for
 `vqbdots.vv`.
+
+=== `Zvqbdot16i` 16-bit Integer Batched Dot-Product Extension
+
+The Zvqbdot16i extension adds instructions that perform batched dot-product
+operations on 16-bit integer vectors, accumulating into 64-bit integers.
+The `vqbdotu.vv` instruction treats the `vs2` operand as unsigned 16-bit
+integers, whereas the `vqbdots.vv` instruction treats the `vs2` operand
+as signed 16-bit integers.
+The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
+with 0 indicating unsigned and 1 indicating signed.
+These instructions use the same encodings as those defined in the Zvqbdot8i
+extension.
+These instructions are reserved unless SEW=16 and LMUL=1.
+The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
+EEW=4*SEW.
+
+Each dot product is computed modulo 2^64^; overflow is ignored.
 
 === `Zvfwbdot16bf` BF16 Batched Dot-Product Extension
 
