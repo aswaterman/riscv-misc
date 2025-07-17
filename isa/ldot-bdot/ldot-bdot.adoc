@@ -41,6 +41,9 @@ These instructions are maskable.
 These instructions always report exceptions with a `vstart` of 0;
 executing one with a nonzero `vstart` is reserved.
 
+The destination vector register cannot overlap with the source vector register
+groups, otherwise the instruction encoding is reserved.
+
 NOTE: Non-accumulating variants are not provided; `vd[0]` can be initialized
 to zero to effect this operation.
 
@@ -171,6 +174,9 @@ for n in [0, 7]
     for k in [0, vl-1]
       v[vd][ci + n] += v[vs2 + n][k] * v[vs1][k]
 ```
+
+The destination vector register group cannot overlap with the source vector
+register groups, otherwise the instruction encoding is reserved.
 
 These instructions always report exceptions with a `vstart` of 0;
 executing one with a nonzero `vstart` is reserved.
