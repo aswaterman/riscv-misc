@@ -39,6 +39,16 @@ public:
   }
 
   template<typename T, int vreg>
+  void splat(T value) {
+    asm volatile ("vmv.v.x v%0, %1" :: "I" (vreg), "r" (value) : "memory");
+  }
+
+  template<typename T, int vreg>
+  void vid() {
+    asm volatile ("vid.v v%0" :: "I" (vreg) : "memory");
+  }
+
+  template<typename T, int vreg>
   void store(T* data) {
     asm volatile ("vse%0.v v%1, (%2)" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
   }
@@ -103,11 +113,22 @@ public:
 
 thread_local vector_state vstate;
 
+#ifndef rdinstret
 static inline size_t rdinstret()
 {
   size_t res;
   asm volatile ("rdinstret %0" : "=r" (res));
   return res;
 }
+#endif
+
+#ifndef rdcycle
+static inline size_t rdcycle()
+{
+  size_t res;
+  asm volatile ("rdcycle %0" : "=r" (res));
+  return res;
+}
+#endif
 
 #endif

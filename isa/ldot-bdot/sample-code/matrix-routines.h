@@ -173,3 +173,17 @@ void NOINLINE matmul_abt(size_t m, size_t n, size_t k, const in_t* A, const in_t
   else
     return matmul_abt_1_8(m, n, k, A, k, B, k, C, n);
 }
+
+template<typename T>
+void vector_fill(T* p, T v, size_t n)
+{
+  vstate.vsetvl<T, 8>(n);
+  vstate.splat<T, 0>(v);
+
+  do {
+    size_t vl = vstate.vsetvl<T, 8>(n);
+    vstate.store<T, 0>(p);
+    p += vl;
+    n -= vl;
+  } while (n);
+}

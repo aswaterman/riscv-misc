@@ -74,6 +74,22 @@ public:
   }
 
   template<typename T, int vreg>
+  void splat(T value) {
+    assert(sizeof(T) * 8 == sew);
+    for (size_t i = 0; i < vl; i++)
+      elt<T>(vreg, i) = value;
+    moves += mem_count(0, vl * sizeof(T));
+  }
+
+  template<typename T, int vreg>
+  void vid() {
+    assert(sizeof(T) * 8 == sew);
+    for (size_t i = 0; i < vl; i++)
+      elt<T>(vreg, i) = i;
+    moves += mem_count(0, vl * sizeof(T));
+  }
+
+  template<typename T, int vreg>
   void store(T* data) {
     assert(sizeof(T) * 8 == sew);
     for (size_t i = 0; i < vl; i++)
