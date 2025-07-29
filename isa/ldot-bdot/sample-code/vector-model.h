@@ -81,6 +81,14 @@ public:
     moves += mem_count(0, vl * sizeof(T));
   }
 
+  template<typename T, int vreg, int vsrc>
+  void move() {
+    assert(sizeof(T) * 8 == sew);
+    for (size_t i = 0; i < vl; i++)
+      elt<T>(vreg, i) = elt<T>(vsrc, i);
+    moves += mem_count(0, vl * sizeof(T));
+  }
+
   template<typename T, int vreg>
   void vid() {
     assert(sizeof(T) * 8 == sew);

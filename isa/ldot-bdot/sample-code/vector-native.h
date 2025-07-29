@@ -43,6 +43,11 @@ public:
     asm volatile ("vmv.v.x v%0, %1" :: "I" (vreg), "r" (value) : "memory");
   }
 
+  template<typename T, int vreg, int vsrc>
+  void move() {
+    asm volatile ("vmv.v.v v%0, v%1" :: "I" (vreg), "I" (vsrc) : "memory");
+  }
+
   template<typename T, int vreg>
   void vid() {
     asm volatile ("vid.v v%0" :: "I" (vreg) : "memory");
