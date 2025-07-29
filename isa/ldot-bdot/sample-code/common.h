@@ -32,6 +32,15 @@ T pun_to(U a)
   return res;
 }
 
+template <typename T>
+T register_barrier(T x)
+{
+#ifdef __GNUC__
+  asm ("" : "+r" (x));
+#endif
+  return x;
+}
+
 static inline constexpr unsigned ilog2(uint64_t x) {
   unsigned res = 0;
   while (x > 1) {

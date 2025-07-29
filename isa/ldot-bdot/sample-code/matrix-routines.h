@@ -1,18 +1,41 @@
 // Inner loop for MxKx8 register tiles
-template<typename in_t, typename out_t, size_t m_unroll, int lmul, bool fringe>
-void INLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda, const in_t* B, size_t ldb, out_t* C, size_t ldc)
+template<typename in_t, typename out_t, size_t m_unroll, int lmul, int interleave, bool fringe>
+void NOINLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda, const in_t* B, size_t ldb, out_t* C, size_t ldc)
 {
-  const int a_reg = 31, b_reg = fringe ? 24 : 0, c_reg = fringe ? lmul : 8, mask = 0;
-  const int a1_reg = (fringe ? (lmul > 1 ? c_reg : b_reg) : a_reg) - 1;
-  const int ap_reg = m_unroll % 2 ? a1_reg : a_reg;
-  const bool schedule_a = lmul > 1 || m_unroll < 23;
+  assert((lmul == 1 || interleave == 1) && m_unroll % interleave == 0);
+
+  const bool schedule_a = lmul > 1 || (m_unroll / interleave) < 23;
+  const int a1_reg = 31, b_reg = fringe ? 24 : 0, c_reg = fringe ? lmul : 8, mask = 0;
+  const int a_reg = !schedule_a ? a1_reg : (fringe ? (lmul > 1 ? c_reg : b_reg) : a1_reg) - 1;
+  const int ap_reg = (m_unroll / interleave) % 2 ? a1_reg : a_reg;
   const bool pipeline_a = schedule_a && !fringe && ap_reg == a_reg;
   const size_t ml = fringe ? n_in : vector_state::mmax;
+
+  typedef uint32_t mask_t;
+  assert(vector_state::mmax * interleave <= 8 * sizeof(mask_t));
+
   vstate.vsetvl<out_t, lmul>(ml);
-  vstate.load_matrix<out_t, c_reg, m_unroll, lmul>(C, ldc, m_unroll);
+  vstate.load_matrix<out_t, c_reg, m_unroll / interleave, lmul>(C, ldc * interleave, m_unroll / interleave);
+
+  for (int i = 1; i < interleave; i++) {
+    size_t offset = i * vector_state::mmax;
+
+    if (sizeof(mask_t) > sizeof(out_t))
+      vstate.vsetvl<mask_t, 1>(1);
+    vstate.move<mask_t, mask>(mask_t(-1) << offset);
+
+    vstate.vsetvl<out_t, lmul>(ml + offset);
+    vstate.load_matrix<out_t, c_reg, m_unroll / interleave, lmul, true>(C - offset + ldc * i, ldc * interleave, m_unroll / interleave);
+  }
 
   if (fringe) {
-    vstate.move<uint8_t, mask>((1U << ml) - 1);
+    if (sizeof(mask_t) > sizeof(out_t))
+      vstate.vsetvl<mask_t, 1>(1);
+
+    mask_t m = 0;
+    for (int i = 0; i < interleave; i++)
+      m |= ((mask_t(1) << ml) - 1) << (i * vector_state::mmax);
+    vstate.move<mask_t, mask>(m);
   }
 
   if (pipeline_a) {
@@ -38,7 +61,7 @@ void INLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda, 
         vstate.load<in_t, ap_reg>(A + vl);
       }
 
-      vstate.matmul<in_t, out_t, i % 2 && schedule_a ? a1_reg : a_reg, b_reg, c_reg+i*lmul, 0, fringe>();
+      vstate.matmul<in_t, out_t, i % 2 && schedule_a ? a1_reg : a_reg, b_reg, c_reg + (i / interleave) * lmul, vector_state::mmax * (i % interleave), fringe>();
     });
 
     A += vl;
@@ -46,7 +69,18 @@ void INLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda, 
   } while (k);
 
   vstate.vsetvl<out_t, lmul>(ml);
-  vstate.store_matrix<out_t, c_reg, m_unroll, lmul>(C, ldc, m_unroll);
+  vstate.store_matrix<out_t, c_reg, m_unroll / interleave, lmul>(C, ldc * interleave, m_unroll / interleave);
+
+  for (int i = 1; i < interleave; i++) {
+    size_t offset = i * vector_state::mmax;
+
+    if (sizeof(mask_t) > sizeof(out_t))
+      vstate.vsetvl<mask_t, 1>(1);
+    vstate.move<mask_t, mask>(mask_t(-1) << offset);
+
+    vstate.vsetvl<out_t, lmul>(ml + offset);
+    vstate.store_matrix<out_t, c_reg, m_unroll / interleave, lmul, true>(C - offset + ldc * i, ldc * interleave, m_unroll / interleave);
+  }
 }
 
 // C += A * B^T using 1xKx8 register tiles
@@ -57,10 +91,10 @@ void NOINLINE matmul_abt_1_8(size_t m, size_t n, size_t k, const in_t* A, size_t
 
   for (size_t mi = 0; mi < m; mi += m_unroll) {
     if (n % n_unroll)
-      matmul_abt_8_body<in_t, out_t, m_unroll, 4, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 4, 1, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
 
     for (size_t ni = n % n_unroll; ni < n; ni += n_unroll) {
-      matmul_abt_8_body<in_t, out_t, m_unroll, 4, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 4, 1, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
     }
   }
 }
@@ -76,10 +110,10 @@ void NOINLINE matmul_abt_5_8(size_t m, size_t n, size_t k, const in_t* A, size_t
 
   for (size_t mi = m % m_unroll; mi < m; mi += m_unroll) {
     if (n % n_unroll)
-      matmul_abt_8_body<in_t, out_t, m_unroll, 4, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 4, 1, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
 
     for (size_t ni = n % n_unroll; ni < n; ni += n_unroll) {
-      matmul_abt_8_body<in_t, out_t, m_unroll, 4, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 4, 1, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
     }
   }
 }
@@ -95,29 +129,29 @@ void NOINLINE matmul_abt_11_8(size_t m, size_t n, size_t k, const in_t* A, size_
 
   for (size_t mi = m % m_unroll; mi < m; mi += m_unroll) {
     if (n % n_unroll)
-      matmul_abt_8_body<in_t, out_t, m_unroll, 2, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 2, 1, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
 
     for (size_t ni = n % n_unroll; ni < n; ni += n_unroll) {
-      matmul_abt_8_body<in_t, out_t, m_unroll, 2, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 2, 1, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
     }
   }
 }
 
-// C += A * B^T using 23xKx8 register tiles
-template<typename in_t, typename out_t>
+// C += A * B^T using (23 * interleave)xKx8 register tiles
+template<typename in_t, typename out_t, int interleave>
 void NOINLINE matmul_abt_23_8(size_t m, size_t n, size_t k, const in_t* A, size_t lda, const in_t* B, size_t ldb, out_t* C, size_t ldc)
 {
-  const size_t m_unroll = 23, n_unroll = 8;
+  const size_t m_unroll = 23 * interleave, n_unroll = 8;
 
   if (m % m_unroll)
     matmul_abt_1_8(m % m_unroll, n, k, A, lda, B, ldb, C, ldc);
 
   for (size_t mi = m % m_unroll; mi < m; mi += m_unroll) {
     if (n % n_unroll)
-      matmul_abt_8_body<in_t, out_t, m_unroll, 1, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 1, interleave, true>(n % n_unroll, k, A + mi*lda, lda, B, ldb, C + mi*ldc, ldc);
 
     for (size_t ni = n % n_unroll; ni < n; ni += n_unroll) {
-      matmul_abt_8_body<in_t, out_t, m_unroll, 1, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
+      matmul_abt_8_body<in_t, out_t, m_unroll, 1, interleave, false>(n_unroll, k, A + mi*lda, lda, B + ni*ldb, ldb, C + mi*ldc + ni, ldc);
     }
   }
 }
@@ -182,9 +216,9 @@ template<typename in_t, typename out_t>
 void NOINLINE matmul_abt(size_t m, size_t n, size_t k, const in_t* A, const in_t* B, out_t* C)
 {
   if (vstate.vlmax<out_t, 1>() >= 16)
-    return matmul_abt_15_16(m, n, k, A, k, B, k, C, n);
+    return matmul_abt_23_8<in_t, out_t, 2>(m, n, k, A, k, B, k, C, n);
   else if (vstate.vlmax<out_t, 1>() >= 8)
-    return matmul_abt_23_8(m, n, k, A, k, B, k, C, n);
+    return matmul_abt_23_8<in_t, out_t, 1>(m, n, k, A, k, B, k, C, n);
   else if (vstate.vlmax<out_t, 1>() >= 4)
     return matmul_abt_11_8(m, n, k, A, k, B, k, C, n);
   else if (vstate.vlmax<out_t, 1>() >= 2)

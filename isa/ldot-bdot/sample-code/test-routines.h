@@ -89,8 +89,8 @@ void benchmark()
   // eliminate fringe-case overhead, and choose K to be very large to
   // minimize tile-transition cost.  This isn't necessary for correctness
   // but is meant to emphasize the inner-loop performance.
-  size_t m = 15 * (vstate.vlmax<out_t, 1>() >= 8 ? 23 : 11);
-  size_t n = 16;
+  size_t m = 46;
+  size_t n = 8;
   size_t k = 512;
 
   size_t alignment = vstate.vlmax<char, 1>();

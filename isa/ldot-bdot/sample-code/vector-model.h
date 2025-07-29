@@ -58,11 +58,17 @@ public:
     return vreg_within_group[n % vlen_in_elts];
   }
 
-  template<typename T, int vreg>
+  bool mask_elt(int vreg, size_t n)
+  {
+    return (elt<uint8_t>(vreg, n / 8) >> (n % 8)) & 1;
+  }
+
+  template<typename T, int vreg, bool masked = false>
   void load(const T* data) {
     assert(sizeof(T) * 8 == sew);
     for (size_t i = 0; i < vl; i++)
-      elt<T>(vreg, i) = data[i];
+      if (!masked || mask_elt(0, i))
+        elt<T>(vreg, i) = data[i];
     loads += mem_count((uintptr_t)data, vl * sizeof(T));
   }
 
@@ -97,27 +103,28 @@ public:
     moves += mem_count(0, vl * sizeof(T));
   }
 
-  template<typename T, int vreg>
+  template<typename T, int vreg, bool masked = false>
   void store(T* data) {
     assert(sizeof(T) * 8 == sew);
     for (size_t i = 0; i < vl; i++)
-      data[i] = elt<T>(vreg, i);
+      if (!masked || mask_elt(0, i))
+        data[i] = elt<T>(vreg, i);
     stores += mem_count((uintptr_t)data, vl * sizeof(T));
   }
 
-  template<typename T, int vreg, int max_n, int lmul=1>
+  template<typename T, int vreg, int max_n, int lmul=1, bool masked = false>
   void INLINE load_matrix(const T* B, size_t ldb, size_t n)
   {
     constexpr_for<0, max_n, 1U>([&](auto i) {
-      if (i < n) load<T, vreg + i*lmul>(&B[i*ldb]);
+      if (i < n) load<T, vreg + i*lmul, masked>(&B[i*ldb]);
     });
   }
 
-  template<typename T, int vreg, int max_n, int lmul=1>
+  template<typename T, int vreg, int max_n, int lmul=1, bool masked = false>
   void INLINE store_matrix(T* B, size_t ldb, size_t n)
   {
     constexpr_for<0, max_n, 1U>([&](auto i) {
-      if (i < n) store<T, vreg + i*lmul>(&B[i*ldb]);
+      if (i < n) store<T, vreg + i*lmul, masked>(&B[i*ldb]);
     });
   }
 
@@ -133,8 +140,7 @@ public:
       size_t cr = c_reg + mi / vlmax<out_t, 1>();
       size_t ci = mi % vlmax<out_t, 1>();
 
-      size_t mask_bit = mi + c_off;
-      if (masked && !((elt<uint8_t>(0, mask_bit / 8) >> (mask_bit % 8)) & 1))
+      if (masked && !mask_elt(0, mi + c_off))
         continue;
 
       for (size_t ki = 0; ki < vl; ki++) {

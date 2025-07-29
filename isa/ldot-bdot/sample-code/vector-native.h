@@ -28,9 +28,12 @@ public:
     return vl;
   }
 
-  template<typename T, int vreg>
+  template<typename T, int vreg, bool masked = false>
   void load(const T* data) {
-    asm volatile ("vle%0.v v%1, (%2)" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
+    if (masked)
+      asm volatile ("vle%0.v v%1, (%2), v0.t" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
+    else
+      asm volatile ("vle%0.v v%1, (%2)" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
   }
 
   template<typename T, int vreg>
@@ -53,24 +56,27 @@ public:
     asm volatile ("vid.v v%0" :: "I" (vreg) : "memory");
   }
 
-  template<typename T, int vreg>
+  template<typename T, int vreg, bool masked = false>
   void store(T* data) {
-    asm volatile ("vse%0.v v%1, (%2)" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
+    if (masked)
+      asm volatile ("vse%0.v v%1, (%2), v0.t" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
+    else
+      asm volatile ("vse%0.v v%1, (%2)" :: "I" (sizeof(T) * 8), "I" (vreg), "r" (data) : "memory");
   }
 
-  template<typename T, int vreg, int max_n, int lmul=1>
+  template<typename T, int vreg, int max_n, int lmul=1, bool masked = false>
   void INLINE load_matrix(const T* B, size_t ldb, size_t n)
   {
     constexpr_for<0, max_n, 1U>([&](auto i) {
-      if (i < n) load<T, vreg + i*lmul>(&B[i*ldb]);
+      if (i < n) load<T, vreg + i*lmul, masked>(&B[i*ldb]);
     });
   }
 
-  template<typename T, int vreg, int max_n, int lmul=1>
+  template<typename T, int vreg, int max_n, int lmul=1, bool masked = false>
   void INLINE store_matrix(T* B, size_t ldb, size_t n)
   {
     constexpr_for<0, max_n, 1U>([&](auto i) {
-      if (i < n) store<T, vreg + i*lmul>(&B[i*ldb]);
+      if (i < n) store<T, vreg + i*lmul, masked>(&B[i*ldb]);
     });
   }
 
