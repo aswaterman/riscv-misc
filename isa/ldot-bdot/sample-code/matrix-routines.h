@@ -3,6 +3,10 @@ template<typename in_t, typename out_t, size_t m_unroll, int lmul, bool fringe>
 void INLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda, const in_t* B, size_t ldb, out_t* C, size_t ldc)
 {
   const int a_reg = 31, b_reg = fringe ? 24 : 0, c_reg = fringe ? lmul : 8, mask = 0;
+  const int a1_reg = (fringe ? (lmul > 1 ? c_reg : b_reg) : a_reg) - 1;
+  const int ap_reg = m_unroll % 2 ? a1_reg : a_reg;
+  const bool schedule_a = lmul > 1 || m_unroll < 23;
+  const bool pipeline_a = schedule_a && !fringe && ap_reg == a_reg;
   const size_t ml = fringe ? n_in : vector_state::mmax;
   vstate.vsetvl<out_t, lmul>(ml);
   vstate.load_matrix<out_t, c_reg, m_unroll, lmul>(C, ldc, m_unroll);
@@ -11,19 +15,34 @@ void INLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda, 
     vstate.move<uint8_t, mask>((1U << ml) - 1);
   }
 
+  if (pipeline_a) {
+    vstate.vsetvl<in_t, 1>(k);
+    vstate.load<in_t, ap_reg>(A);
+  }
+
   do {
     size_t vl = vstate.vsetvl<in_t, 1>(k);
+    k -= vl;
+
+    if (pipeline_a && ap_reg != a_reg)
+      vstate.move<in_t, a_reg, ap_reg>();
 
     vstate.load_matrix<in_t, b_reg, vector_state::mmax - fringe>(B, ldb, ml);
 
     constexpr_for<0, m_unroll, 1>([&](auto i) {
-      vstate.load<in_t, a_reg>(A + i*lda);
-      vstate.matmul<in_t, out_t, a_reg, b_reg, c_reg+i*lmul, 0, fringe>();
+      if (!pipeline_a && (i == 0 || !schedule_a))
+        vstate.load<in_t, a_reg>(A + i*lda);
+      if (i != m_unroll-1 && schedule_a)
+        vstate.load<in_t, i % 2 ? a_reg : a1_reg>(A + (i+1)*lda);
+      if (i == m_unroll-1 && pipeline_a && k) {
+        vstate.load<in_t, ap_reg>(A + vl);
+      }
+
+      vstate.matmul<in_t, out_t, i % 2 && schedule_a ? a1_reg : a_reg, b_reg, c_reg+i*lmul, 0, fringe>();
     });
 
     A += vl;
     B += vl;
-    k -= vl;
   } while (k);
 
   vstate.vsetvl<out_t, lmul>(ml);
