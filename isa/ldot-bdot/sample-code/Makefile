@@ -18,7 +18,7 @@ bdot-test: main.cc *.h
 	g++ -std=c++17 -O2 $< -o $@
 
 bdot-test-riscv: main.cc *.h
-	riscv64-unknown-elf-g++ -DIME -march=rv64gcv -O2 $< -o $@
+	riscv64-unknown-elf-g++ -march=rv64gcv -O2 $< -o $@
 
 clean:
 	rm -f bdot-test bdot-test-riscv
