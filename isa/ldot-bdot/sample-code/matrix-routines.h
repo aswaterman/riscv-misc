@@ -15,17 +15,20 @@ void NOINLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda
   assert(vector_state::mmax * interleave <= 8 * sizeof(mask_t));
 
   vstate.vsetvl<out_t, lmul>(ml);
-  vstate.load_matrix<out_t, c_reg, m_unroll / interleave, lmul>(C, ldc * interleave, m_unroll / interleave);
+  if (interleave == 1) {
+    vstate.load_matrix<out_t, c_reg, m_unroll / interleave, lmul>(register_barrier(C), ldc * interleave, m_unroll / interleave);
+  } else {
+    for (int i = 0; i < interleave; i++) {
+      size_t offset = i * vector_state::mmax;
 
-  for (int i = 1; i < interleave; i++) {
-    size_t offset = i * vector_state::mmax;
+      if (sizeof(mask_t) > sizeof(out_t))
+        vstate.vsetvl<mask_t, 1>(1);
+      vstate.move<mask_t, mask>(mask_t(-1) << offset);
 
-    if (sizeof(mask_t) > sizeof(out_t))
-      vstate.vsetvl<mask_t, 1>(1);
-    vstate.move<mask_t, mask>(mask_t(-1) << offset);
-
-    vstate.vsetvl<out_t, lmul>(ml + offset);
-    vstate.load_matrix<out_t, c_reg, m_unroll / interleave, lmul, true>(C - offset + ldc * i, ldc * interleave, m_unroll / interleave);
+      auto base = register_barrier(C - offset + ldc * i);
+      vstate.vsetvl<out_t, 1>(ml + offset);
+      vstate.load_matrix<out_t, c_reg, m_unroll / interleave, 1, true>(base, ldc * interleave, m_unroll / interleave);
+    }
   }
 
   if (fringe) {
@@ -69,17 +72,20 @@ void NOINLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda
   } while (k);
 
   vstate.vsetvl<out_t, lmul>(ml);
-  vstate.store_matrix<out_t, c_reg, m_unroll / interleave, lmul>(C, ldc * interleave, m_unroll / interleave);
+  if (interleave == 1) {
+    vstate.store_matrix<out_t, c_reg, m_unroll / interleave, lmul>(register_barrier(C), ldc * interleave, m_unroll / interleave);
+  } else {
+    for (int i = 0; i < interleave; i++) {
+      size_t offset = i * vector_state::mmax;
 
-  for (int i = 1; i < interleave; i++) {
-    size_t offset = i * vector_state::mmax;
+      if (sizeof(mask_t) > sizeof(out_t))
+        vstate.vsetvl<mask_t, 1>(1);
+      vstate.move<mask_t, mask>(mask_t(-1) << offset);
 
-    if (sizeof(mask_t) > sizeof(out_t))
-      vstate.vsetvl<mask_t, 1>(1);
-    vstate.move<mask_t, mask>(mask_t(-1) << offset);
-
-    vstate.vsetvl<out_t, lmul>(ml + offset);
-    vstate.store_matrix<out_t, c_reg, m_unroll / interleave, lmul, true>(C - offset + ldc * i, ldc * interleave, m_unroll / interleave);
+      auto base = register_barrier(C - offset + ldc * i);
+      vstate.vsetvl<out_t, lmul>(ml + offset);
+      vstate.store_matrix<out_t, c_reg, m_unroll / interleave, lmul, true>(base, ldc * interleave, m_unroll / interleave);
+    }
   }
 }
 
@@ -141,7 +147,7 @@ void NOINLINE matmul_abt_11_8(size_t m, size_t n, size_t k, const in_t* A, size_
 template<typename in_t, typename out_t, int interleave>
 void NOINLINE matmul_abt_23_8(size_t m, size_t n, size_t k, const in_t* A, size_t lda, const in_t* B, size_t ldb, out_t* C, size_t ldc)
 {
-  const size_t m_unroll = 23 * interleave, n_unroll = 8;
+  const size_t m_unroll = 22 * interleave, n_unroll = 8;
 
   if (m % m_unroll)
     matmul_abt_1_8(m % m_unroll, n, k, A, lda, B, ldb, C, ldc);
@@ -228,7 +234,7 @@ void NOINLINE matmul_abt(size_t m, size_t n, size_t k, const in_t* A, const in_t
 }
 
 template<typename T>
-void vector_fill(T* p, T v, size_t n)
+void NOINLINE vector_fill(T* p, T v, size_t n)
 {
   vstate.vsetvl<T, 8>(n);
   vstate.splat<T, 0>(v);
