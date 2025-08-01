@@ -33,6 +33,7 @@ int main(int argc, char** argv)
 #endif
 
   quick_test<int8_t, int32_t>();
+  quick_test<int16_t, int64_t>();
 #ifndef __riscv
   quick_test<bf16, float>();
   quick_test<double, double>();
