@@ -21,10 +21,12 @@ public:
 
   template<typename in_t, int lmul>
   size_t vsetvl(size_t avl) {
-    constexpr int imm = (ilog2(sizeof(in_t)) << 3) + ilog2(lmul);
+    constexpr bool vta = true;
+    constexpr bool altfmt = type_is_altfmt<in_t>();
+    constexpr int imm = (altfmt << 8) + (vta << 6) + (ilog2(sizeof(in_t)) << 3) + ilog2(lmul);
 
     size_t vl;
-    asm volatile ("vsetvli %0, %1, e%2, m%3, ta, mu" : "=r" (vl) : "r" (avl), "I" (8 * sizeof(in_t)), "I" (lmul));
+    asm volatile ("vsetvli %0, %1, %2" : "=r" (vl) : "r" (avl), "I" (imm));
     return vl;
   }
 
@@ -82,10 +84,10 @@ public:
 
   template<typename in_t, typename out_t, int a_reg, int b_reg, int c_reg, int c_off, bool masked>
   void matmul() {
-    bool in_float = (in_t)0 != (in_t)0.1;
-    bool in_bfloat = in_float && pun_to<uint16_t, in_t>(in_t(1)) == (pun_to<uint32_t, float>(float(1)) >> 16);
-    bool in_unsigned_int = !in_float && (in_t)0 < (in_t)-1;
-    bool in_signed_int = !in_float && !in_unsigned_int;
+    bool in_float = (in_t)0 != (in_t)0.5;
+    bool altfmt = type_is_altfmt<in_t>();
+    bool in_unsigned_int = !in_float && !altfmt;
+    bool in_signed_int = !in_float && altfmt;
     bool pretty = false;
 
     if (in_float && sizeof(out_t) == sizeof(in_t)) {

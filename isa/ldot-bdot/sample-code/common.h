@@ -59,4 +59,15 @@ constexpr void INLINE constexpr_for(F&& f)
   }
 }
 
+template<typename T>
+constexpr bool type_is_altfmt()
+{
+  bool in_float = (T)0 != (T)0.5;
+  bool in_bfloat = in_float && pun_to<uint16_t, T>(T(1)) == (pun_to<uint32_t, float>(float(1)) >> 16);
+  bool in_unsigned_int = !in_float && (T)0 < (T)-1;
+  bool in_signed_int = !in_float && !in_unsigned_int;
+
+  return in_bfloat || in_signed_int;
+}
+
 #endif
