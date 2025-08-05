@@ -19,10 +19,10 @@ public:
     return vlenb * lmul / sizeof(T);
   }
 
-  template<typename in_t, int lmul>
+  template<typename in_t, int lmul, bool maybe_altfmt = false>
   size_t vsetvl(size_t avl) {
     constexpr bool vta = true;
-    constexpr bool altfmt = type_is_altfmt<in_t>();
+    constexpr bool altfmt = maybe_altfmt && type_is_altfmt<in_t>();
     constexpr int imm = (altfmt << 8) + (vta << 6) + (ilog2(sizeof(in_t)) << 3) + ilog2(lmul);
 
     size_t vl;

@@ -47,7 +47,7 @@ void NOINLINE matmul_abt_8_body(size_t n_in, size_t k, const in_t* A, size_t lda
   }
 
   do {
-    size_t vl = vstate.vsetvl<in_t, 1>(k);
+    size_t vl = vstate.vsetvl<in_t, 1, true>(k);
     k -= vl;
 
     if (pipeline_a && ap_reg != a_reg)
@@ -179,7 +179,7 @@ void INLINE matmul_abt_15_16_body(size_t n_in, size_t k, const in_t* A, size_t l
   }
 
   do {
-    size_t vl = vstate.vsetvl<in_t, 1>(k);
+    size_t vl = vstate.vsetvl<in_t, 1, true>(k);
     vstate.load_matrix<in_t, b_reg, n_unroll - fringe>(B, ldb, n);
 
     constexpr_for<0, m_unroll, 1>([&](auto i) {

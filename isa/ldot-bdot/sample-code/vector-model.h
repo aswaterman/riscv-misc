@@ -38,7 +38,7 @@ public:
     return vlen / (8 * sizeof(T)) * lmul;
   }
 
-  template<typename in_t, int lmul>
+  template<typename in_t, int lmul, bool altfmt = false>
   size_t vsetvl(size_t avl) {
     sew = 8 * sizeof(in_t);
     vl = std::min(avl, vlmax<in_t, lmul>());
