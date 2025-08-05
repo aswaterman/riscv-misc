@@ -20,6 +20,8 @@ void NOINLINE populate_matrix(size_t m, size_t n, int scale, in_t* A)
 template<typename in_t, typename out_t>
 void NOINLINE test(size_t m, size_t n, size_t k)
 {
+  bool b_signed = in_t(-1) == -1;
+
   if (int64_t(in_t(m + k)) != int64_t(m + k) || int64_t(1 - int64_t(in_t(k))) != 1 - int64_t(k) ||
       int64_t(in_t(k + n)) != int64_t(k + n) || int64_t(1 - int64_t(in_t(n))) != 1 - int64_t(n)) {
     printf("%zu %zu %zu will overflow for sizeof(in_t) = %zu\n", m, n, k, sizeof(in_t));
@@ -32,7 +34,7 @@ void NOINLINE test(size_t m, size_t n, size_t k)
 
   populate_matrix<in_t, false>(m, k, 1, A);
 
-  populate_matrix<in_t, true>(k, n, -1, B);
+  populate_matrix<in_t, true>(k, n, b_signed ? -1 : 2, B);
 
   memset(C, 0, sizeof(C));
 
@@ -45,6 +47,12 @@ void NOINLINE test(size_t m, size_t n, size_t k)
       // B(i,j) = i - j
       // C(i,j) = -N*i*j + (i-j)*N*(N+1)/2 + N*(N+1)*(2N+1)/6
       int64_t expected = -int64_t(k)*(mi+1)*(ni+1) + int64_t((mi-ni)*k*(k+1))/2 + int64_t(k)*(k+1)*(2*k+1)/6;
+      if (!b_signed) {
+        // A(i,j) = i + j
+        // B(i,j) = i + 2j
+        // C(i,j) = 2N*i*j + (i+2j)*N*(N+1)/2 + N*(N+1)*(2N+1)/6
+        expected = int64_t(k)*(mi+1)*2*(ni+1) + int64_t(mi+2*ni+3)*k*(k+1)/2 + int64_t(k)*(k+1)*(2*k+1)/6;
+      }
       if (C[mi*n+ni] != 2 * expected) {
         printf("%zu %zu %zu C[%zu][%zu] = %ld, expected %ld\n", m, n, k, mi, ni, (long)C[mi*n+ni], (long)(2 * expected));
         abort();
