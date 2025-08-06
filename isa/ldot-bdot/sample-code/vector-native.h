@@ -21,12 +21,12 @@ public:
 
   template<typename in_t, int lmul, bool maybe_altfmt = false>
   size_t vsetvl(size_t avl) {
-    constexpr bool vta = true;
-    constexpr bool altfmt = maybe_altfmt && type_is_altfmt<in_t>();
-    constexpr int imm = (altfmt << 8) + (vta << 6) + (ilog2(sizeof(in_t)) << 3) + ilog2(lmul);
-
     size_t vl;
-    asm volatile ("vsetvli %0, %1, %2" : "=r" (vl) : "r" (avl), "I" (imm));
+    if (maybe_altfmt && type_is_altfmt<in_t>()) {
+      asm volatile ("vsetvli %0, %1, e%2alt, m%3, ta, mu" : "=r" (vl) : "r" (avl), "I" (8 * sizeof(in_t)), "I" (lmul));
+    } else {
+      asm volatile ("vsetvli %0, %1, e%2, m%3, ta, mu" : "=r" (vl) : "r" (avl), "I" (8 * sizeof(in_t)), "I" (lmul));
+    }
     return vl;
   }
 
