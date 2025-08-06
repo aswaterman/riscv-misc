@@ -27,22 +27,17 @@ int main(int argc, char** argv)
 #endif
 
   benchmark<int8_t, int32_t>();
-#ifndef __riscv
   benchmark<bf16, float>();
-  benchmark<double, double>();
-#endif
 
   quick_test<int8_t, int32_t>();
+  quick_test<uint8_t, uint32_t>();
   quick_test<int16_t, int64_t>();
-#ifndef __riscv
+  quick_test<uint16_t, uint64_t>();
   quick_test<bf16, float>();
-  quick_test<double, double>();
-#endif
 
 #ifndef __riscv
   exhaustive_test<int8_t, int32_t>();
   exhaustive_test<bf16, float>();
-  exhaustive_test<double, double>();
 #endif
 
   return 0;

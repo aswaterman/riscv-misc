@@ -9,10 +9,10 @@ run-bdot-test: bdot-test
 	./$< 1024
 
 run-bdot-test-riscv: bdot-test-riscv
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvl128b pk ./$<
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvl256b pk ./$<
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvl512b pk ./$<
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvl1024b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl128b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl256b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl512b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl1024b pk ./$<
 
 bdot-test: main.cc *.h
 	g++ -std=c++17 -O2 $< -o $@
