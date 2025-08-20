@@ -2,14 +2,12 @@
 :ge: &#8805;
 :ne: &#8800;
 
-== Additional BF16 vector compute support extension *Zvfbfa*, Version 0.1
+== Additional BF16 vector compute support extension *Zvfbfa*, Version 0.2
 
 The Zvfbfa extension adds more complete BF16 vector compute support.
 
-The Zvfbfa extension requires the Zve32f and Zfbfmin extensions.
-
-NOTE: Zvfbfa is compatible with, but does not require, Zvfbfwma and
-Zvfbfmin.
+The Zvfbfa extension requires the Zve32f, Zfbfmin, Zvfbfwma, and Zvfbfmin
+extensions.
 
 Zvfbfa adds a 1-bit field, `altfmt`, to the `vtype` CSR in bit position 8.
 Attempting to set `altfmt`=1 and SEW >= 32 is reserved.
