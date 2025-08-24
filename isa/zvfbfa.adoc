@@ -66,21 +66,21 @@ format for any operand that would otherwise have used the FP16 format:
 - `vfwadd.w[vf]`
 - `vfwsub.w[vf]`
 - `vfwmul.v[vf]`
-- `vfwmacc.v[vf]` (same semantics as `vfwmaccbf16.v[vf]`)
+- `vfwmacc.v[vf]`
 - `vfwnmacc.v[vf]`
 - `vfwmsac.v[vf]`
 - `vfwnmsac.v[vf]`
 - `vfmv.s.f` ††
 - `vfmv.f.s` †
-- `vfwcvt.f.f.v` (same semantics as `vfwcvtbf16.f.f.v`)
-- `vfncvt.f.f.w` (same semantics as `vfncvtbf16.f.f.w`)
+- `vfwcvt.f.f.v`
+- `vfncvt.f.f.w`
 - `vfncvt.rod.f.f.w`
 - `vfrsqrt7.v`
 - `vfrec7.v`
 - `vfclass.v`
-- `vfwmaccbf16.v[vf]` †
-- `vfwcvtbf16.f.f.v` †
-- `vfncvtbf16.f.f.w` †
+- `vfwmaccbf16.v[vf]` † (only if Zvfbfwma is implemented)
+- `vfwcvtbf16.f.f.v` † (only if Zvfbfmin is implemented)
+- `vfncvtbf16.f.f.w` † (only if Zvfbfmin is implemented)
 
 The instructions marked with † have the same semantics regardless of `altfmt`.
 The instructions marked with †† differ only in that improperly NaN-boxed
