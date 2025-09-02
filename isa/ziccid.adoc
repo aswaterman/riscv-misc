@@ -60,6 +60,19 @@ Because ILEN must be at least the width of the instruction being modified,
 a lower bound on `M` can be inferred from the instruction's width and XLEN.
 ====
 
+Memory protection is applied only to bytes that are not discarded by this
+algorithm.
+
+[NOTE]
+====
+For example, if `M`=8, `N`=0, and the PMP granularity is 4 bytes, then
+it is valid to fetch a 4-byte instruction at `pc`, even if fetching from
+`pc` + 4 would have been disallowed by PMP.
+
+For simplicity, implementations are likely to choose a PMP granularity no
+smaller than `M`.
+====
+
 == Ziccid Extension for Instruction/Data Coherence and Consistency, Version 0.2
 
 The Ziccid extension mandates more stringent requirements for consistency
