@@ -66,7 +66,7 @@ vqldotu.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
 vqldots.vv vd, vs2, rs1, vm   # vd[0] += signed(vs2) dot vs1
 ----
 
-These dot products are computed modulo 2^32^; overflow is ignored.
+These dot products are computed modulo 2^32^.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x26 for `vqldotu.vv` and funct6=0x27 for
@@ -86,7 +86,7 @@ extension.
 These instructions are reserved unless SEW=16.
 The `vd` operand has EEW=4*SEW.
 
-These dot products are computed modulo 2^64^; overflow is ignored.
+These dot products are computed modulo 2^64^.
 
 === `Zvfwldot16bf` BF16 Dot-Product Extension, Version {dot-version}
 
@@ -218,7 +218,7 @@ vqbdotu.vv vd, vs2, vs1, vm   # vs2 unsigned
 vqbdots.vv vd, vs2, rs1, vm   # vs2 signed
 ----
 
-Each dot product is computed modulo 2^32^; overflow is ignored.
+Each dot product is computed modulo 2^32^.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x2e for `vqbdotu.vv` and funct6=0x2f for
@@ -239,7 +239,7 @@ These instructions are reserved unless SEW=16 and LMUL=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
-Each dot product is computed modulo 2^64^; overflow is ignored.
+Each dot product is computed modulo 2^64^.
 
 === `Zvfwbdot16bf` BF16 Batched Dot-Product Extension
 
