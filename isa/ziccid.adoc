@@ -114,6 +114,9 @@ a different hart, the new hart must execute a FENCE.I instruction before
 resuming execution of the thread.
 ====
 
+An instruction fetch appears in the global memory order before any explicit
+memory accesses that instruction gives rise to.
+
 An instruction fetch from memory with the cacheability and coherence PMAs must
 return a value that a load from the same address would have returned, provided
 sufficient permissions.
