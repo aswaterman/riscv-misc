@@ -107,6 +107,13 @@ keeping the buffer coherent by making the coherent instruction cache inclusive
 of the buffer.
 ====
 
+[NOTE]
+====
+To maintain the in-order fetch property for a thread that migrates to
+a different hart, the new hart must execute a FENCE.I instruction before
+resuming execution of the thread.
+====
+
 An instruction fetch from memory with the cacheability and coherence PMAs must
 return a value that a load from the same address would have returned, provided
 sufficient permissions.
