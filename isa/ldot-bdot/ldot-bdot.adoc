@@ -109,6 +109,16 @@ The `vfwldot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and f
 NOTE: A future extension could define an instruction that uses the same code
 points with `vtype`.`altfmt`=0 to compute IEEE 754 FP16 dot products.
 
+[NOTE]
+====
+Ordered variants of the floating-point long dot-product instructions are not
+provided because they can be emulated efficiently using existing instruction
+sequences.
+
+An unordered FP32 long dot-product instruction is not provided for the same
+reason.
+====
+
 === `Zvfqldot8f` OCP FP8 Dot-Product Extension, Version {dot-version}
 
 The Zvfqldot8f extension adds two instructions, each of which computes a dot
