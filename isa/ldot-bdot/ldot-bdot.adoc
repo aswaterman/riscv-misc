@@ -164,6 +164,9 @@ image::bdot-simple.svg[Static, pdfwidth=4in, title="Zvbdot operation, VLEN &#880
 For long-vector implementations with VLEN > 8*EEW, each instruction also has
 a 3-bit scaled-by-8 immediate `ci` indicating which eight elements of `vd`
 destination vector are read and written.
+The `ci` field is encoded in `vs2[2:0]`; these bits are not needed for the
+register address since `vs2` addresses an EMUL=8 register group for these
+instructions.
 The instruction is reserved if `ci` {ge} `VLEN/(8*EEW)`.
 
 NOTE: The ability to use all of `vd` improves the efficiency of register-tiled
