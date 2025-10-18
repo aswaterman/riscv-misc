@@ -1,24 +1,24 @@
-all: bdot-test bdot-test-riscv
+all: bdota-test bdota-test-riscv
 
-run: run-bdot-test run-bdot-test-riscv
+run: run-bdota-test run-bdota-test-riscv
 
-run-bdot-test: bdot-test
+run-bdota-test: bdota-test
 	./$< 128
 	./$< 256
 	./$< 512
 	./$< 1024
 
-run-bdot-test-riscv: bdot-test-riscv
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl128b pk ./$<
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl256b pk ./$<
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl512b pk ./$<
-	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdot8i_zvqbdot16i_zvfwbdot16bf_zvfbdot32f_zvl1024b pk ./$<
+run-bdota-test-riscv: bdota-test-riscv
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdota8i_zvqbdota16i_zvfwbdota16bf_zvfbdota32f_zvl128b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdota8i_zvqbdota16i_zvfwbdota16bf_zvfbdota32f_zvl256b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdota8i_zvqbdota16i_zvfwbdota16bf_zvfbdota32f_zvl512b pk ./$<
+	spike --isa=rv64gcv_zicsr_zicntr_zifencei_zvfh_zvfbfmin_zvqbdota8i_zvqbdota16i_zvfwbdota16bf_zvfbdota32f_zvl1024b pk ./$<
 
-bdot-test: main.cc *.h
+bdota-test: main.cc *.h
 	g++ -std=c++17 -O2 $< -o $@
 
-bdot-test-riscv: main.cc *.h
+bdota-test-riscv: main.cc *.h
 	riscv64-unknown-elf-g++ -march=rv64gcv -O2 $< -o $@
 
 clean:
-	rm -f bdot-test bdot-test-riscv
+	rm -f bdota-test bdota-test-riscv

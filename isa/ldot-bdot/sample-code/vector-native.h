@@ -1,7 +1,7 @@
 #ifndef ZVBDOT_VECTOR_NATIVE_H
 #define ZVBDOT_VECTOR_NATIVE_H
 
-// Support routines for V and Zvbdot extensions.
+// Support routines for V and Zvbdota extensions.
 
 #include "common.h"
 
@@ -94,30 +94,30 @@ public:
       if (!pretty)
         asm volatile (".insn r 0x77, 0x1, 0x2b*2+%3, x%0, x%1, x%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg + c_off / 8), "I" (!masked));
       else if (masked)
-        asm volatile ("vfbdot.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vfbdota.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
       else
-        asm volatile ("vfbdot.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vfbdota.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
     } else if (in_float && sizeof(out_t) == 2 * sizeof(in_t)) {
       if (!pretty)
         asm volatile (".insn r 0x77, 0x1, 0x2c*2+%3, x%0, x%1, x%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg + c_off / 8), "I" (!masked));
       else if (masked)
-        asm volatile ("vfwbdot.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vfwbdota.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
       else
-        asm volatile ("vfwbdot.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vfwbdota.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
     } else if (in_unsigned_int && sizeof(out_t) == 4 * sizeof(in_t)) {
       if (!pretty)
         asm volatile (".insn r 0x77, 0x0, 0x2e*2+%3, x%0, x%1, x%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg + c_off / 8), "I" (!masked));
       else if (masked)
-        asm volatile ("vqbdotu.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqbdotau.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
       else
-        asm volatile ("vqbdotu.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqbdotau.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
     } else if (in_signed_int && sizeof(out_t) == 4 * sizeof(in_t)) {
       if (!pretty)
         asm volatile (".insn r 0x77, 0x0, 0x2f*2+%3, x%0, x%1, x%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg + c_off / 8), "I" (!masked));
       else if (masked)
-        asm volatile ("vqbdots.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqbdotas.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
       else
-        asm volatile ("vqbdots.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqbdotas.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
     } else {
       abort();
     }

@@ -1,8 +1,8 @@
 :le: &#8804;
 :ge: &#8805;
-:dot-version: 0.1
+:dot-version: 0.2
 
-= `Zvldot` and `Zvbdot` Families of Dot-Product Extensions, Version {dot-version}
+= `Zvldota` and `Zvbdota` Families of Dot-Product Extensions, Version {dot-version}
 
 This document describes several extensions that accelerate the computation
 of Euclidean inner products, a.k.a. dot products.
@@ -22,9 +22,9 @@ Because `altfmt` is written as a consequence of executing the `vsetvli`
 instruction needed for stripmine loop control, there is often no performance
 overhead to this approach.
 
-== `Zvldot` Family of Long Dot-Product Extensions, Version {dot-version}
+== `Zvldota` Family of Long Dot-Product Extensions, Version {dot-version}
 
-Each extension in the `Zvldot` family adds one or more instructions that
+Each extension in the `Zvldota` family adds one or more instructions that
 compute a dot product between two vector register groups, identified by
 `vs2` and `vs1`, producing a scalar result that is accumulated into element
 0 of vector register `vd`.
@@ -47,12 +47,12 @@ groups, otherwise the instruction encoding is reserved.
 NOTE: Non-accumulating variants are not provided; `vd[0]` can be initialized
 to zero to effect this operation.
 
-=== `Zvqldot8i` 8-bit Integer Dot-Product Extension, Version {dot-version}
+=== `Zvqldota8i` 8-bit Integer Dot-Product Extension, Version {dot-version}
 
-The Zvqldot8i extension adds two instructions, each of which computes a dot
+The Zvqldota8i extension adds two instructions, each of which computes a dot
 product between two 8-bit integer vectors, accumulating into a 32-bit scalar.
-The `vqldotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
-integers, whereas the `vqldots.vv` instruction treats the `vs2` operand
+The `vqldotau.vv` instruction treats the `vs2` operand as unsigned 8-bit
+integers, whereas the `vqldotas.vv` instruction treats the `vs2` operand
 as signed 8-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
@@ -60,51 +60,51 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvqldot8i 8-bit integer long dot-product instructions
+# Zvqldota8i 8-bit integer long dot-product instructions
 # signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
-vqldotu.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
-vqldots.vv vd, vs2, vs1, vm   # vd[0] += signed(vs2) dot vs1
+vqldotau.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
+vqldotas.vv vd, vs2, vs1, vm   # vd[0] += signed(vs2) dot vs1
 ----
 
 These dot products are computed modulo 2^32^.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
-and with funct6=0x26 for `vqldotu.vv` and funct6=0x27 for
-`vqldots.vv`.
+and with funct6=0x26 for `vqldotau.vv` and funct6=0x27 for
+`vqldotas.vv`.
 
-=== `Zvqldot16i` 16-bit Integer Dot-Product Extension, Version {dot-version}
+=== `Zvqldota16i` 16-bit Integer Dot-Product Extension, Version {dot-version}
 
-The Zvqldot16i extension adds two instructions, each of which computes a dot
+The Zvqldota16i extension adds two instructions, each of which computes a dot
 product between two 16-bit integer vectors, accumulating into a 64-bit scalar.
-The `vqldotu.vv` instruction treats the `vs2` operand as unsigned 16-bit
-integers, whereas the `vqldots.vv` instruction treats the `vs2` operand
+The `vqldotau.vv` instruction treats the `vs2` operand as unsigned 16-bit
+integers, whereas the `vqldotas.vv` instruction treats the `vs2` operand
 as signed 16-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
-These instructions use the same encodings as those defined in the Zvqldot8i
+These instructions use the same encodings as those defined in the Zvqldota8i
 extension.
 These instructions are reserved unless SEW=16.
 The `vd` operand has EEW=4*SEW.
 
 These dot products are computed modulo 2^64^.
 
-=== `Zvfwldot16bf` BF16 Dot-Product Extension, Version {dot-version}
+=== `Zvfwldota16bf` BF16 Dot-Product Extension, Version {dot-version}
 
-The Zvfwldot16bf extension adds one instruction, `vfwldot.vv`, which computes
+The Zvfwldota16bf extension adds one instruction, `vfwldota.vv`, which computes
 a dot product between two BF16 vectors, accumulating into an FP32 scalar.
 The instruction is reserved unless `vtype`.`altfmt`=1 and SEW=16.
 The `vd` operand has EEW=2*SEW.
 
 ----
-# Zvfwldot16bf BF16 long dot-product instruction
+# Zvfwldota16bf BF16 long dot-product instruction
 # altfmt=1
-vfwldot.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
+vfwldota.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
 ----
 
 These dot products are computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
-The `vfwldot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x24.
+The `vfwldota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x24.
 
 NOTE: A future extension could define an instruction that uses the same code
 points with `vtype`.`altfmt`=0 to compute IEEE 754 FP16 dot products.
@@ -119,12 +119,12 @@ An unordered FP32 long dot-product instruction is not provided for the same
 reason.
 ====
 
-=== `Zvfqldot8f` OCP FP8 Dot-Product Extension, Version {dot-version}
+=== `Zvfqldota8f` OCP FP8 Dot-Product Extension, Version {dot-version}
 
-The Zvfqldot8f extension adds two instructions, each of which computes a dot
+The Zvfqldota8f extension adds two instructions, each of which computes a dot
 product between two OCP FP8 vectors, accumulating into an FP32 scalar.
-The `vfqldot.vv` instruction treats the `vs2` operand as E4M3 numbers,
-whereas the `vfqldot.alt.vv` instruction treats the `vs2` operand
+The `vfqldota.vv` instruction treats the `vs2` operand as E4M3 numbers,
+whereas the `vfqldota.alt.vv` instruction treats the `vs2` operand
 as E5M2 numbers.
 The `vtype`.`altfmt` field selects the datatype of the `vs1` operand,
 with 0 indicating E4M3 and 1 indicating E5M2.
@@ -132,20 +132,20 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvfqldot8f OCP FP8 long dot-product instructions
+# Zvfqldota8f OCP FP8 long dot-product instructions
 # format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
-vfqldot.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
-vfqldot.alt.vv vd, vs2, vs1, vm   # vd[0] += E5M2(vs2) dot vs1
+vfqldota.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
+vfqldota.alt.vv vd, vs2, vs1, vm   # vd[0] += E5M2(vs2) dot vs1
 ----
 
 These dot products are computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
 The instructions are encoded in major opcode 0x77 with funct3=1,
-and with funct6=0x26 for `vfqldot.vv` and funct6=0x27 for
-`vfqldot.alt.vv`.
+and with funct6=0x26 for `vfqldota.vv` and funct6=0x27 for
+`vfqldota.alt.vv`.
 
-== `Zvbdot` Family of Batched Dot-Product Extensions, Version {dot-version}
+== `Zvbdota` Family of Batched Dot-Product Extensions, Version {dot-version}
 
 Batched dot-product instructions compute up to eight dot products at a time.
 Each instruction in these extensions treats `vs1` as an EMUL=1 vector register
@@ -159,7 +159,7 @@ products.
 Tail elements are substituted with the bit pattern of all zeros, then the
 computation is performed as though `vl`=VLMAX.
 
-image::bdot-simple.svg[Static, pdfwidth=4in, title="Zvbdot operation, VLEN &#8804; 8*EEW"]
+image::bdota-simple.svg[Static, pdfwidth=4in, title="Zvbdota operation, VLEN &#8804; 8*EEW"]
 
 For long-vector implementations with VLEN > 8*EEW, each instruction also has
 a 3-bit scaled-by-8 immediate `ci` indicating which eight elements of `vd`
@@ -172,7 +172,7 @@ The instruction is reserved if `ci` {ge} `VLEN/(8*EEW)`.
 NOTE: The ability to use all of `vd` improves the efficiency of register-tiled
 matrix multiplication.
 
-image::bdot-ci.svg[Static, pdfwidth=7in, title="Zvbdot operation, VLEN > 8*EEW"]
+image::bdota-ci.svg[Static, pdfwidth=7in, title="Zvbdota operation, VLEN > 8*EEW"]
 
 Each instruction is optionally masked by the `v0` mask register.
 If masked and the mask bit corresponding to the destination element in `vd` is clear,
@@ -211,12 +211,12 @@ The M dimension has no fringe cases, since these instructions only process one
 row of the A matrix at a time.
 ====
 
-=== `Zvqbdot8i` 8-bit Integer Batched Dot-Product Extension
+=== `Zvqbdota8i` 8-bit Integer Batched Dot-Product Extension
 
-The Zvqbdot8i extension adds instructions that perform batched dot-product
+The Zvqbdota8i extension adds instructions that perform batched dot-product
 operations on 8-bit integer vectors, accumulating into 32-bit integers.
-The `vqbdotu.vv` instruction treats the `vs2` operand as unsigned 8-bit
-integers, whereas the `vqbdots.vv` instruction treats the `vs2` operand
+The `vqbdotau.vv` instruction treats the `vs2` operand as unsigned 8-bit
+integers, whereas the `vqbdotas.vv` instruction treats the `vs2` operand
 as signed 8-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
@@ -225,28 +225,28 @@ The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
 ----
-# Zvqbdot8i 8-bit integer batched dot-product instructions
+# Zvqbdota8i 8-bit integer batched dot-product instructions
 # signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
-vqbdotu.vv vd, vs2, vs1, ci, vm   # vs2 unsigned
-vqbdots.vv vd, vs2, vs1, ci, vm   # vs2 signed
+vqbdotau.vv vd, vs2, vs1, ci, vm   # vs2 unsigned
+vqbdotas.vv vd, vs2, vs1, ci, vm   # vs2 signed
 ----
 
 Each dot product is computed modulo 2^32^.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
-and with funct6=0x2e for `vqbdotu.vv` and funct6=0x2f for
-`vqbdots.vv`.
+and with funct6=0x2e for `vqbdotau.vv` and funct6=0x2f for
+`vqbdotas.vv`.
 
-=== `Zvqbdot16i` 16-bit Integer Batched Dot-Product Extension
+=== `Zvqbdota16i` 16-bit Integer Batched Dot-Product Extension
 
-The Zvqbdot16i extension adds instructions that perform batched dot-product
+The Zvqbdota16i extension adds instructions that perform batched dot-product
 operations on 16-bit integer vectors, accumulating into 64-bit integers.
-The `vqbdotu.vv` instruction treats the `vs2` operand as unsigned 16-bit
-integers, whereas the `vqbdots.vv` instruction treats the `vs2` operand
+The `vqbdotau.vv` instruction treats the `vs2` operand as unsigned 16-bit
+integers, whereas the `vqbdotas.vv` instruction treats the `vs2` operand
 as signed 16-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
-These instructions use the same encodings as those defined in the Zvqbdot8i
+These instructions use the same encodings as those defined in the Zvqbdota8i
 extension.
 These instructions are reserved unless SEW=16 and LMUL=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
@@ -254,31 +254,31 @@ EEW=4*SEW.
 
 Each dot product is computed modulo 2^64^.
 
-=== `Zvfwbdot16bf` BF16 Batched Dot-Product Extension
+=== `Zvfwbdota16bf` BF16 Batched Dot-Product Extension
 
-The Zvfwbdot16bf extension adds one instruction, `vfwbdot.vv`, which performs
+The Zvfwbdota16bf extension adds one instruction, `vfwbdota.vv`, which performs
 a batched dot-product operation on BF16 vectors, accumulating into FP32.
 The instruction is reserved unless SEW=16, LMUL=1, and `vtype`.`altfmt`=1.
 The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=2*SEW.
 
 ----
-# Zvfwbdot16bf BF16 batched dot-product instruction
+# Zvfwbdota16bf BF16 batched dot-product instruction
 # altfmt=1
-vfwbdot.vv vd, vs2, vs1, ci, vm
+vfwbdota.vv vd, vs2, vs1, ci, vm
 ----
 
 Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
-The `vfwbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
+The `vfwbdota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
 
-=== `Zvfqbdot8f` OCP FP8 Batched Dot-Product Extension
+=== `Zvfqbdota8f` OCP FP8 Batched Dot-Product Extension
 
-The Zvfqbdot8f extension adds instructions that perform batched dot-product
+The Zvfqbdota8f extension adds instructions that perform batched dot-product
 operations on 8-bit OCP FP8 vectors, accumulating into FP32.
-The `vfqbdot.vv` instruction treats the `vs2` operand as E4M3 numbers,
-whereas the `vfqbdot.alt.vv` instruction treats the `vs2` operand
+The `vfqbdota.vv` instruction treats the `vs2` operand as E4M3 numbers,
+whereas the `vfqbdota.alt.vv` instruction treats the `vs2` operand
 as E5M2 numbers.
 The `vtype`.`altfmt` field selects the datatype of the `vs1` operand,
 with 0 indicating E4M3 and 1 indicating E5M2.
@@ -287,29 +287,29 @@ The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
 ----
-# Zvfqbdot8f OCP FP8 batched dot-product instructions
+# Zvfqbdota8f OCP FP8 batched dot-product instructions
 # format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
-vfqbdot.vv     vd, vs2, vs1, ci, vm   # vs2 E4M3
-vfqbdot.alt.vv vd, vs2, vs1, ci, vm   # vs2 E5M2
+vfqbdota.vv     vd, vs2, vs1, ci, vm   # vs2 E4M3
+vfqbdota.alt.vv vd, vs2, vs1, ci, vm   # vs2 E5M2
 ----
 
 Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
 The instructions are encoded in major opcode 0x77 with funct3=1,
-and with funct6=0x2e for `vfqbdot.vv` and funct6=0x2f for
-`vfqbdot.alt.vv`.
+and with funct6=0x2e for `vfqbdota.vv` and funct6=0x2f for
+`vfqbdota.alt.vv`.
 
-=== `Zvfbdot32f` FP32 Batched Dot-Product Extension
+=== `Zvfbdota32f` FP32 Batched Dot-Product Extension
 
-The Zvfbdot32f extension adds one instruction, `vfbdot.vv`, which performs
+The Zvfbdota32f extension adds one instruction, `vfbdota.vv`, which performs
 a batched dot-product operation on FP32 vectors, accumulating into FP32.
 The instruction is reserved unless SEW=32 and LMUL=1.
 The `vs1`, `vs2`, and `vd` operands all have EEW=SEW.
 
 ----
-# Zvfbdot32f FP32 batched dot-product instruction
-vfbdot.vv vd, vs2, vs1, ci, vm
+# Zvfbdota32f FP32 batched dot-product instruction
+vfbdota.vv vd, vs2, vs1, ci, vm
 ----
 
 The intermediate FP32 products may either be kept in full precision or may be rounded
@@ -323,9 +323,9 @@ precise to implement SGEMM.
 NOTE: The algorithm used by the `vfredusum.vs` offers several implementation
 choices.
 Implementations are not required to use the same algorithm configuration for
-the `vfbdot.vv` instruction as for the `vfredusum.vs` instruction.
+the `vfbdota.vv` instruction as for the `vfredusum.vs` instruction.
 
-The `vfbdot.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2b.
+The `vfbdota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2b.
 
 === Sample matrix-multiplication code
 
@@ -379,68 +379,68 @@ loop:
   # Load 1 row of A into v31; macc into v16
   add a6, a1, t1
   vle8.v v31, (a6)
-  vqbdots.vv v16, v31, v0, 0
-  vqbdots.vv v16, v31, v8, 8
+  vqbdotas.vv v16, v31, v0, 0
+  vqbdotas.vv v16, v31, v8, 8
 
   # Load 1 row of A into v31; macc into v17
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v17, v31, v0, 0
-  vqbdots.vv v17, v31, v8, 8
+  vqbdotas.vv v17, v31, v0, 0
+  vqbdotas.vv v17, v31, v8, 8
 
   # etc., total of 15 times
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v18, v31, v0, 0
-  vqbdots.vv v18, v31, v8, 8
+  vqbdotas.vv v18, v31, v0, 0
+  vqbdotas.vv v18, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v19, v31, v0, 0
-  vqbdots.vv v19, v31, v8, 8
+  vqbdotas.vv v19, v31, v0, 0
+  vqbdotas.vv v19, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v20, v31, v0, 0
-  vqbdots.vv v20, v31, v8, 8
+  vqbdotas.vv v20, v31, v0, 0
+  vqbdotas.vv v20, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v21, v31, v0, 0
-  vqbdots.vv v21, v31, v8, 8
+  vqbdotas.vv v21, v31, v0, 0
+  vqbdotas.vv v21, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v22, v31, v0, 0
-  vqbdots.vv v22, v31, v8, 8
+  vqbdotas.vv v22, v31, v0, 0
+  vqbdotas.vv v22, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v23, v31, v0, 0
-  vqbdots.vv v23, v31, v8, 8
+  vqbdotas.vv v23, v31, v0, 0
+  vqbdotas.vv v23, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v24, v31, v0, 0
-  vqbdots.vv v24, v31, v8, 8
+  vqbdotas.vv v24, v31, v0, 0
+  vqbdotas.vv v24, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v25, v31, v0, 0
-  vqbdots.vv v25, v31, v8, 8
+  vqbdotas.vv v25, v31, v0, 0
+  vqbdotas.vv v25, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v26, v31, v0, 0
-  vqbdots.vv v26, v31, v8, 8
+  vqbdotas.vv v26, v31, v0, 0
+  vqbdotas.vv v26, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v27, v31, v0, 0
-  vqbdots.vv v27, v31, v8, 8
+  vqbdotas.vv v27, v31, v0, 0
+  vqbdotas.vv v27, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v28, v31, v0, 0
-  vqbdots.vv v28, v31, v8, 8
+  vqbdotas.vv v28, v31, v0, 0
+  vqbdotas.vv v28, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v29, v31, v0, 0
-  vqbdots.vv v29, v31, v8, 8
+  vqbdotas.vv v29, v31, v0, 0
+  vqbdotas.vv v29, v31, v8, 8
   add a6, a6, a2
   vle8.v v31, (a6)
-  vqbdots.vv v30, v31, v0, 0
-  vqbdots.vv v30, v31, v8, 8
+  vqbdotas.vv v30, v31, v0, 0
+  vqbdotas.vv v30, v31, v8, 8
 
   # repeat until K dimension exhausted
   sub a0, a0, t3

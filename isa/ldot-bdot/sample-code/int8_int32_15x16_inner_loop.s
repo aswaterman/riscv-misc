@@ -37,70 +37,70 @@
 
   # C[0, 15:0] += A[0, :] * B[:, 15:0]
   vle8.v v31, (a3)
-  vqbdots.vv v16, v31, v0, 0
-  vqbdots.vv v16, v31, v8, 8
+  vqbdotas.vv v16, v31, v0, 0
+  vqbdotas.vv v16, v31, v8, 8
   add a5,a3,s1
 
   # C[1, 15:0] += A[1, :] * B[:, 15:0]
   vle8.v v31, (a5)
-  vqbdots.vv v17, v31, v0, 0
-  vqbdots.vv v17, v31, v8, 8
+  vqbdotas.vv v17, v31, v0, 0
+  vqbdotas.vv v17, v31, v8, 8
   add a5,a5,s1
 
   # ...
   vle8.v v31, (a5)
-  vqbdots.vv v18, v31, v0, 0
-  vqbdots.vv v18, v31, v8, 8
+  vqbdotas.vv v18, v31, v0, 0
+  vqbdotas.vv v18, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v19, v31, v0, 0
-  vqbdots.vv v19, v31, v8, 8
+  vqbdotas.vv v19, v31, v0, 0
+  vqbdotas.vv v19, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v20, v31, v0, 0
-  vqbdots.vv v20, v31, v8, 8
+  vqbdotas.vv v20, v31, v0, 0
+  vqbdotas.vv v20, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v21, v31, v0, 0
-  vqbdots.vv v21, v31, v8, 8
+  vqbdotas.vv v21, v31, v0, 0
+  vqbdotas.vv v21, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v22, v31, v0, 0
-  vqbdots.vv v22, v31, v8, 8
+  vqbdotas.vv v22, v31, v0, 0
+  vqbdotas.vv v22, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v23, v31, v0, 0
-  vqbdots.vv v23, v31, v8, 8
+  vqbdotas.vv v23, v31, v0, 0
+  vqbdotas.vv v23, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v24, v31, v0, 0
-  vqbdots.vv v24, v31, v8, 8
+  vqbdotas.vv v24, v31, v0, 0
+  vqbdotas.vv v24, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v25, v31, v0, 0
-  vqbdots.vv v25, v31, v8, 8
+  vqbdotas.vv v25, v31, v0, 0
+  vqbdotas.vv v25, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v26, v31, v0, 0
-  vqbdots.vv v26, v31, v8, 8
+  vqbdotas.vv v26, v31, v0, 0
+  vqbdotas.vv v26, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v27, v31, v0, 0
-  vqbdots.vv v27, v31, v8, 8
+  vqbdotas.vv v27, v31, v0, 0
+  vqbdotas.vv v27, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v28, v31, v0, 0
-  vqbdots.vv v28, v31, v8, 8
+  vqbdotas.vv v28, v31, v0, 0
+  vqbdotas.vv v28, v31, v8, 8
   add a5,a5,s1
   vle8.v v31, (a5)
-  vqbdots.vv v29, v31, v0, 0
-  vqbdots.vv v29, v31, v8, 8
+  vqbdotas.vv v29, v31, v0, 0
+  vqbdotas.vv v29, v31, v8, 8
   add a5,a5,s1
 
   # C[14, 15:0] += A[14, :] * B[:, 15:0]
   vle8.v v31, (a5)
-  vqbdots.vv v30, v31, v0, 0
-  vqbdots.vv v30, v31, v8, 8
+  vqbdotas.vv v30, v31, v0, 0
+  vqbdotas.vv v30, v31, v8, 8
 
   # Loop until K dimension is exhausted
   sub a4,a4,s10
