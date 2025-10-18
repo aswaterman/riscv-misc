@@ -738,6 +738,11 @@ Note:: In the current specification the most significant bit of the max product 
 
 Note:: Any one of the `2*p` bits of the max product can be the leading bit due to leading zeros in subnormal inputs. It is also possible for the maximum product to have more leading zeros than the other products (including when product alignment is taken into account). This is discussed in more detailed in the next section <<#RVBNAReferenceExponent>>.
 
+Note:: The RVBNA pseudocode assumes that operands are IEEE encoded, but this is not actually a requirement of RVBNA.
+The pseudocode can easily be generalized to other floating-point encodings (e.g. Open Compute OFP formats).
+The actual requirement is to used biased exponent to compute the reference exponent and not real exponent (in particular because we want to avoid normalizing subnormal operands before computing the reference exponent).
+The significand also need to be materialized correctly for the product (including possible implicit digit(s)).
+
 [#RVBNAReferenceExponent]
 ==== Reference Exponent
 
