@@ -72,6 +72,8 @@ The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x26 for `vqldotau.vv` and funct6=0x27 for
 `vqldotas.vv`.
 
+The Zvqldota8i extension depends on the Zve32x extension.
+
 === `Zvqldota16i` 16-bit Integer Dot-Product Extension, Version {dot-version}
 
 The Zvqldota16i extension adds two instructions, each of which computes a dot
@@ -87,6 +89,8 @@ These instructions are reserved unless SEW=16.
 The `vd` operand has EEW=4*SEW.
 
 These dot products are computed modulo 2^64^.
+
+The Zvqldota16i extension depends on the Zve64x extension.
 
 === `Zvfwldota16bf` BF16 Dot-Product Extension, Version {dot-version}
 
@@ -119,6 +123,8 @@ An unordered FP32 long dot-product instruction is not provided for the same
 reason.
 ====
 
+The Zvfwldota16bf extension depends on the Zve32f extension.
+
 === `Zvfqldota8f` OCP FP8 Dot-Product Extension, Version {dot-version}
 
 The Zvfqldota8f extension adds two instructions, each of which computes a dot
@@ -144,6 +150,8 @@ Section <<#DPBulkNorm>>.
 The instructions are encoded in major opcode 0x77 with funct3=1,
 and with funct6=0x26 for `vfqldota.vv` and funct6=0x27 for
 `vfqldota.alt.vv`.
+
+The Zvfqldota8f extension depends on the Zve32f extension.
 
 == `Zvbdota` Family of Batched Dot-Product Extensions, Version {dot-version}
 
@@ -237,6 +245,8 @@ The instructions are encoded in major opcode 0x77 with funct3=0,
 and with funct6=0x2e for `vqbdotau.vv` and funct6=0x2f for
 `vqbdotas.vv`.
 
+The Zvqbdota8i extension depends on the Zve32x extension.
+
 === `Zvqbdota16i` 16-bit Integer Batched Dot-Product Extension
 
 The Zvqbdota16i extension adds instructions that perform batched dot-product
@@ -253,6 +263,8 @@ The `vs1` and `vs2` operands have EEW=SEW, and the `vd` operand has
 EEW=4*SEW.
 
 Each dot product is computed modulo 2^64^.
+
+The Zvqbdota16i extension depends on the Zve64x extension.
 
 === `Zvfwbdota16bf` BF16 Batched Dot-Product Extension
 
@@ -272,6 +284,8 @@ Each dot product is computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
 The `vfwbdota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2c.
+
+The Zvfwbdota16bf extension depends on the Zve32f extension.
 
 === `Zvfqbdota8f` OCP FP8 Batched Dot-Product Extension
 
@@ -300,6 +314,8 @@ The instructions are encoded in major opcode 0x77 with funct3=1,
 and with funct6=0x2e for `vfqbdota.vv` and funct6=0x2f for
 `vfqbdota.alt.vv`.
 
+The Zvfqbdota8f extension depends on the Zve32f extension.
+
 === `Zvfbdota32f` FP32 Batched Dot-Product Extension
 
 The Zvfbdota32f extension adds one instruction, `vfbdota.vv`, which performs
@@ -326,6 +342,8 @@ Implementations are not required to use the same algorithm configuration for
 the `vfbdota.vv` instruction as for the `vfredusum.vs` instruction.
 
 The `vfbdota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x2b.
+
+The Zvfbdota32f extension depends on the Zve32f extension.
 
 === Sample matrix-multiplication code
 
