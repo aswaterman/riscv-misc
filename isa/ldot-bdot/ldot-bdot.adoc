@@ -584,9 +584,13 @@ BulkNormalizedDotProduct(A[n], B[n]) {
 
 
    // predicate output special cases
+   // expected Not a Number (NaN) result
    let nanResult = false
+   // expected infinite result
+   let infiniteResult = false
+   // invalid operation flag
    let invalidFlag = false
-   let infinite = false
+   // sign of infinite result
    let infiniteSign = 0
 
     // determining maximum reference exponent
@@ -620,9 +624,9 @@ BulkNormalizedDotProduct(A[n], B[n]) {
         let infiniteProdLHS = (A_i_isInf && !B_i_isNaN  && !B_i_isZero)
         let infiniteProdRHS = (B_i_isInf && !A_i_isNaN  && !A_i_isZero)
         let infiniteProd = infiniteProdLHS || infiniteProdRHS
-        let invalidSum = infinite && infiniteProd && (infiniteSign != prodSigns[i])
+        let invalidSum = infiniteResult && infiniteProd && (infiniteSign != prodSigns[i])
 
-        infinite ||= infiniteProd
+        infiniteResult ||= infiniteProd
         invalidFlag ||= invalidProd || invalidSum || A_i_isSNaN || B_i_isSNaN
         infiniteSign = infiniteProd ? prodSigns[i] : infiniteSign
 
@@ -649,7 +653,7 @@ BulkNormalizedDotProduct(A[n], B[n]) {
         }
         // canonical quiet NaN
         return (overflowExp << (q - 1)) | (1 << (q - 2))
-    } else if (infinite) {
+    } else if (infiniteResult) {
         return (infiniteSign << (q + f - 1)) | (overflowExp << (q - 1))
     }
 
