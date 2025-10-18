@@ -532,7 +532,18 @@ Formally, bulk normalization is characterized by multiple parameters:
 
 `o` is defined to accommodate any carry overflow and is defined to be `ceil(log2(n))`.
 
-The number of guard bits, `g`, is also defined to be `ceil(log2(n))`.
+The number of guard bits, `g`, is defined to be `ceil(log2(n))`.
+
+Note:: It is expected that `n` would be a constant defined by each operation/implementation using RVBNA.
+`n` is not expected to depend on a dynamic parameter such as `vl`. Dot product operations are still allowed to use `vl` or any dynamic length parameter but are encouraged to not link this to the bulk normalization parameters (which is similar to assuming identity-value products are injected in place of inactive elements).
+`n` may vary depending on the element width (e.g. be different for different values of `SEW`).
+
+Note:: Given the recommendation made on `n`, RVBNA mandates a fixed value of `g` for a given format size.
+This reduces the space of possible implementations. An implementation using RVBNA for different formats with different `n` values requires support for multiple values of `g`.
+Supporting multiple values of `g` is straightforward: an implementation can build a shared accumulator datapath based on the maximum `g` value: gmax.
+Behavior for smaller `g` values would be obtained by OR-reducing both the sticky bits defined by `gmax` and the extra `gmax - g` least significant bits of the aligned products into the least significant accumulator bit. This should not require more than a few extra gates for hardware implementations.
+
+Note:: In its current version, RVBNA is only defined for symmetric products (i.e., both factors have the same `e` and `p`). It could be later extended to asymmetric products (mixed formats) if the need arises.
 
 Informally, RVBNA works as follows:
 
