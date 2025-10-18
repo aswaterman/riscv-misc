@@ -108,16 +108,16 @@ public:
       if (!pretty)
         asm volatile (".insn r 0x77, 0x0, 0x2e*2+%3, x%0, x%1, x%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg + c_off / 8), "I" (!masked));
       else if (masked)
-        asm volatile ("vqbdotau.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqwbdotau.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
       else
-        asm volatile ("vqbdotau.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqwbdotau.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
     } else if (in_signed_int && sizeof(out_t) == 4 * sizeof(in_t)) {
       if (!pretty)
         asm volatile (".insn r 0x77, 0x0, 0x2f*2+%3, x%0, x%1, x%2" :: "I" (c_reg), "I" (a_reg), "I" (b_reg + c_off / 8), "I" (!masked));
       else if (masked)
-        asm volatile ("vqbdotas.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqwbdotas.vv v%0, v%1, v%2, %3, v0.t" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
       else
-        asm volatile ("vqbdotas.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
+        asm volatile ("vqwbdotas.vv v%0, v%1, v%2, %3" :: "I" (c_reg), "I" (a_reg), "I" (b_reg), "I" (c_off));
     } else {
       abort();
     }
