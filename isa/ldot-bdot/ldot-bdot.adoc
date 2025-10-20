@@ -2,7 +2,7 @@
 :ge: &#8805;
 :dot-version: 0.2
 
-= `Zvldota` and `Zvbdota` Families of Dot-Product Extensions, Version {dot-version}
+= `Zvdota` and `Zvbdota` Families of Dot-Product Extensions, Version {dot-version}
 
 This document describes several extensions that accelerate the computation
 of Euclidean inner products, a.k.a. dot products.
@@ -22,9 +22,9 @@ Because `altfmt` is written as a consequence of executing the `vsetvli`
 instruction needed for stripmine loop control, there is often no performance
 overhead to this approach.
 
-== `Zvldota` Family of Long Dot-Product Extensions, Version {dot-version}
+== `Zvdota` Family of Long Dot-Product Extensions, Version {dot-version}
 
-Each extension in the `Zvldota` family adds one or more instructions that
+Each extension in the `Zvdota` family adds one or more instructions that
 compute a dot product between two vector register groups, identified by
 `vs2` and `vs1`, producing a scalar result that is accumulated into element
 0 of vector register `vd`.
@@ -47,12 +47,12 @@ groups, otherwise the instruction encoding is reserved.
 NOTE: Non-accumulating variants are not provided; `vd[0]` can be initialized
 to zero to effect this operation.
 
-=== `Zvqwldota8i` 8-bit Integer Dot-Product Extension, Version {dot-version}
+=== `Zvqwdota8i` 8-bit Integer Dot-Product Extension, Version {dot-version}
 
-The Zvqwldota8i extension adds two instructions, each of which computes a dot
+The Zvqwdota8i extension adds two instructions, each of which computes a dot
 product between two 8-bit integer vectors, accumulating into a 32-bit scalar.
-The `vqwldotau.vv` instruction treats the `vs2` operand as unsigned 8-bit
-integers, whereas the `vqwldotas.vv` instruction treats the `vs2` operand
+The `vqwdotau.vv` instruction treats the `vs2` operand as unsigned 8-bit
+integers, whereas the `vqwdotas.vv` instruction treats the `vs2` operand
 as signed 8-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
@@ -60,55 +60,55 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvqwldota8i 8-bit integer long dot-product instructions
+# Zvqwdota8i 8-bit integer long dot-product instructions
 # signedness of vs1 supplied by altfmt (0 unsigned, 1 signed)
-vqwldotau.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
-vqwldotas.vv vd, vs2, vs1, vm   # vd[0] += signed(vs2) dot vs1
+vqwdotau.vv vd, vs2, vs1, vm   # vd[0] += unsigned(vs2) dot vs1
+vqwdotas.vv vd, vs2, vs1, vm   # vd[0] += signed(vs2) dot vs1
 ----
 
 These dot products are computed modulo 2^32^.
 
 The instructions are encoded in major opcode 0x77 with funct3=0,
-and with funct6=0x26 for `vqwldotau.vv` and funct6=0x27 for
-`vqwldotas.vv`.
+and with funct6=0x26 for `vqwdotau.vv` and funct6=0x27 for
+`vqwdotas.vv`.
 
-The Zvqwldota8i extension depends on the Zve32x extension.
+The Zvqwdota8i extension depends on the Zve32x extension.
 
-=== `Zvqwldota16i` 16-bit Integer Dot-Product Extension, Version {dot-version}
+=== `Zvqwdota16i` 16-bit Integer Dot-Product Extension, Version {dot-version}
 
-The Zvqwldota16i extension adds two instructions, each of which computes a dot
+The Zvqwdota16i extension adds two instructions, each of which computes a dot
 product between two 16-bit integer vectors, accumulating into a 64-bit scalar.
-The `vqwldotau.vv` instruction treats the `vs2` operand as unsigned 16-bit
-integers, whereas the `vqwldotas.vv` instruction treats the `vs2` operand
+The `vqwdotau.vv` instruction treats the `vs2` operand as unsigned 16-bit
+integers, whereas the `vqwdotas.vv` instruction treats the `vs2` operand
 as signed 16-bit integers.
 The `vtype`.`altfmt` field selects the signedness of the `vs1` operand,
 with 0 indicating unsigned and 1 indicating signed.
-These instructions use the same encodings as those defined in the Zvqwldota8i
+These instructions use the same encodings as those defined in the Zvqwdota8i
 extension.
 These instructions are reserved unless SEW=16.
 The `vd` operand has EEW=4*SEW.
 
 These dot products are computed modulo 2^64^.
 
-The Zvqwldota16i extension depends on the Zve64x extension.
+The Zvqwdota16i extension depends on the Zve64x extension.
 
-=== `Zvfwldota16bf` BF16 Dot-Product Extension, Version {dot-version}
+=== `Zvfwdota16bf` BF16 Dot-Product Extension, Version {dot-version}
 
-The Zvfwldota16bf extension adds one instruction, `vfwldota.vv`, which computes
+The Zvfwdota16bf extension adds one instruction, `vfwdota.vv`, which computes
 a dot product between two BF16 vectors, accumulating into an FP32 scalar.
 The instruction is reserved unless `vtype`.`altfmt`=1 and SEW=16.
 The `vd` operand has EEW=2*SEW.
 
 ----
-# Zvfwldota16bf BF16 long dot-product instruction
+# Zvfwdota16bf BF16 long dot-product instruction
 # altfmt=1
-vfwldota.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
+vfwdota.vv vd, vs2, vs1, vm   # vd[0] += vs2 dot vs1
 ----
 
 These dot products are computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
-The `vfwldota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x24.
+The `vfwdota.vv` instruction is encoded in major opcode 0x77 with funct3=1 and funct6=0x24.
 
 NOTE: A future extension could define an instruction that uses the same code
 points with `vtype`.`altfmt`=0 to compute IEEE 754 FP16 dot products.
@@ -123,14 +123,14 @@ An unordered FP32 long dot-product instruction is not provided for the same
 reason.
 ====
 
-The Zvfwldota16bf extension depends on the Zve32f extension.
+The Zvfwdota16bf extension depends on the Zve32f extension.
 
-=== `Zvfqwldota8f` OCP FP8 Dot-Product Extension, Version {dot-version}
+=== `Zvfqwdota8f` OCP FP8 Dot-Product Extension, Version {dot-version}
 
-The Zvfqwldota8f extension adds two instructions, each of which computes a dot
+The Zvfqwdota8f extension adds two instructions, each of which computes a dot
 product between two OCP FP8 vectors, accumulating into an FP32 scalar.
-The `vfqwldota.vv` instruction treats the `vs2` operand as E4M3 numbers,
-whereas the `vfqwldota.alt.vv` instruction treats the `vs2` operand
+The `vfqwdota.vv` instruction treats the `vs2` operand as E4M3 numbers,
+whereas the `vfqwdota.alt.vv` instruction treats the `vs2` operand
 as E5M2 numbers.
 The `vtype`.`altfmt` field selects the datatype of the `vs1` operand,
 with 0 indicating E4M3 and 1 indicating E5M2.
@@ -138,20 +138,20 @@ These instructions are reserved unless SEW=8.
 The `vd` operand has EEW=4*SEW.
 
 ----
-# Zvfqwldota8f OCP FP8 long dot-product instructions
+# Zvfqwdota8f OCP FP8 long dot-product instructions
 # format of vs1 supplied by altfmt (0 E4M3, 1 E5M2)
-vfqwldota.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
-vfqwldota.alt.vv vd, vs2, vs1, vm   # vd[0] += E5M2(vs2) dot vs1
+vfqwdota.vv     vd, vs2, vs1, vm   # vd[0] += E4M3(vs2) dot vs1
+vfqwdota.alt.vv vd, vs2, vs1, vm   # vd[0] += E5M2(vs2) dot vs1
 ----
 
 These dot products are computed using the bulk-normalization scheme defined in
 Section <<#DPBulkNorm>>.
 
 The instructions are encoded in major opcode 0x77 with funct3=1,
-and with funct6=0x26 for `vfqwldota.vv` and funct6=0x27 for
-`vfqwldota.alt.vv`.
+and with funct6=0x26 for `vfqwdota.vv` and funct6=0x27 for
+`vfqwdota.alt.vv`.
 
-The Zvfqwldota8f extension depends on the Zve32f extension.
+The Zvfqwdota8f extension depends on the Zve32f extension.
 
 == `Zvbdota` Family of Batched Dot-Product Extensions, Version {dot-version}
 
