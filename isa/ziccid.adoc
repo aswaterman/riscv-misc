@@ -177,8 +177,15 @@ Instructions are fetched in program order from the instruction cache, then
 inserted into the instruction buffer in program order.
 If an instruction is not present in the instruction cache, the instruction is
 read from memory and cached.
-Memory supplies the value written by the most recent globally visible store to
-that address.
+
+For each instruction byte read, memory supplies the value written to that byte
+by the store that is the latest in global memory order among the
+following stores:
+. Stores that write that byte and that precede _i_ in the
+global memory order
+. Stores that write that byte and that precede _i_ in
+program order
+
 
 The instruction cache may also be populated by prefetching from arbitrary
 memory addresses.
