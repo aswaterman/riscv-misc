@@ -163,3 +163,34 @@ The Ziccid extension depends on the Ziccif extension.
 NOTE: Although instruction/data consistency and instruction-fetch atomicity
 are conceptually independent properties, the former is much more useful in
 conjunction with the latter.
+
+=== An Operational Model
+
+An implementation with the Ziccid extension behaves in a manner consistent
+with the following operational model.
+
+In this model, harts have two stages of operation: instruction fetch
+and execution.
+Each hart has an instruction cache and an instruction buffer of bounded
+capacity.
+Instructions are fetched in program order from the instruction cache, then
+inserted into the instruction buffer in program order.
+If an instruction is not present in the instruction cache, the instruction is
+read from memory and cached.
+Memory supplies the value written by the most recent globally visible store to
+that address.
+
+The instruction cache may also be populated by prefetching from arbitrary
+memory addresses.
+
+After some amount of time, instructions are dequeued in program order from the
+instruction buffer and executed.
+Instructions are executed in program order, but explicit memory accesses to
+which instructions give rise may be reordered in any manner consistent with
+RVWMO.
+
+Memory writes, upon becoming globally visible, synchronously remove all harts'
+instruction cache entries corresponding to the same address.
+
+The FENCE.I instruction waits until all stores from the same hart have become
+globally visible, then flushes the instruction buffer.
