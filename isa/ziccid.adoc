@@ -151,11 +151,12 @@ program order.
 
 NOTE: This property is analogous to RVWMO's Load Value Axiom.
 
-The instruction cache may also be populated by prefetching from arbitrary
+Instruction-cache entries may be deallocated at any time.
+Instruction-cache entries may also be allocated at any time, for arbitrary
 memory addresses.
 
-NOTE: This property implies that speculative instruction-cache refill is
-permitted.
+NOTE: This property implies that prefetching and speculative instruction-cache
+refill is permitted.
 
 After some amount of time, instructions are dequeued in program order from the
 instruction buffer and executed.
@@ -191,4 +192,4 @@ instruction-cache entries corresponding memory regions that do _not_ have both
 the cacheability and coherence PMAs.
 
 NOTE: This property retains FENCE.I's pre-Ziccid semantics for non-cacheable
-memory.
+and/or non-coherent memory.
