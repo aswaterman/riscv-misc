@@ -146,8 +146,7 @@ If an instruction is not present in the instruction cache, the instruction is
 read from memory and cached.
 
 For each instruction byte read from memory, memory supplies the value written
-by the most recent store that precedes the fetch in global memory order or
-program order.
+by the most recent store that precedes the fetch in global memory order.
 
 NOTE: This property is analogous to RVWMO's Load Value Axiom.
 
@@ -177,12 +176,8 @@ Writes to memory regions with both the cacheability and coherence PMAs remove
 all harts' instruction-cache entries corresponding to the same address, as
 part of becoming globally visible.
 
-When a FENCE.I instruction is executed, all instruction-cache entries on this
-hart corresponding to the addresses of older stores from this hart that have
-not yet become globally visible are removed.
-
-NOTE: Forcing older stores to become globally visible on a FENCE.I is
-sufficient, but not necessary, to implement this property.
+The FENCE.I instruction waits for all of the hart's older stores to become
+globally visible.
 
 The FENCE.I instruction additionally flushes all of the local hart's
 instruction-cache entries corresponding memory regions that do _not_ have both
