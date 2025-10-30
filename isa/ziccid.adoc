@@ -174,18 +174,15 @@ example, suffices to guarantee that the second store will not become visible
 to any instruction fetch before the first store does.
 
 Writes to memory regions with both the cacheability and coherence PMAs remove
-the local hart's instruction-cache entries corresponding to the same address,
-as part of the execution phase.
-
-NOTE: This property does not imply that the fetch of an instruction immediately
-following a store will observe the store, as the subsequent instruction might
-already have been fetched and buffered.
-
-Writes to memory regions with both the cacheability and coherence PMAs remove
 all harts' instruction-cache entries corresponding to the same address, as
 part of becoming globally visible.
 
-The FENCE.I instruction flushes the instruction buffer.
+When a FENCE.I instruction is executed, all instruction-cache entries on this
+hart corresponding to the addresses of older stores from this hart that have
+not yet become globally visible are removed.
+
+NOTE: Forcing older stores to become globally visible on a FENCE.I is
+sufficient, but not necessary, to implement this property.
 
 The FENCE.I instruction additionally flushes all of the local hart's
 instruction-cache entries corresponding memory regions that do _not_ have both
@@ -193,3 +190,5 @@ the cacheability and coherence PMAs.
 
 NOTE: This property retains FENCE.I's pre-Ziccid semantics for non-cacheable
 and/or non-coherent memory.
+
+Finally, the FENCE.I instruction flushes the instruction buffer.
