@@ -143,19 +143,18 @@ capacity.
 Instructions are fetched in program order from the instruction cache, then
 inserted into the instruction buffer in program order.
 If an instruction is not present in the instruction cache, the instruction is
-read from memory and cached.
+read from memory, inserted into the cache, then inserted into the instruction
+buffer in program order.
 
-For each instruction byte read from memory, memory supplies the value written
-by the most recent store that precedes the fetch in global memory order.
+For each instruction byte read from memory into the instruction cache, memory
+supplies the value written by the most recent store that precedes the read in
+global memory order.
 
-NOTE: This property is analogous to RVWMO's Load Value Axiom.
+Instruction-cache entries may be removed at any time.
+Instruction-cache entries corresponding to arbitrary memory addresses
+may be inserted at any time.
 
-Instruction-cache entries may be deallocated at any time.
-Instruction-cache entries may also be allocated at any time, for arbitrary
-memory addresses.
-
-NOTE: This property implies that prefetching and speculative instruction-cache
-refill is permitted.
+NOTE: These properties permit prefetching and speculation.
 
 After some amount of time, instructions are dequeued in program order from the
 instruction buffer and executed.
@@ -172,18 +171,17 @@ NOTE: Executing a `fence w,w` instruction between two store instructions, for
 example, suffices to guarantee that the second store will not become visible
 to any instruction fetch before the first store does.
 
-Writes to memory regions with both the cacheability and coherence PMAs remove
-all harts' instruction-cache entries corresponding to the same address, as
-part of becoming globally visible.
+Stores to memory regions with both the cacheability and coherence PMAs
+remove all harts' instruction-cache entries corresponding to the same
+address, as part of becoming globally visible.
 
-The FENCE.I instruction waits for all of the hart's older stores to become
-globally visible.
+The FENCE.I instruction performs the following operations sequentially:
 
-The FENCE.I instruction additionally flushes all of the local hart's
-instruction-cache entries corresponding memory regions that do _not_ have both
-the cacheability and coherence PMAs.
+- All of the hart's older stores become globally visible.
+- All of the hart's instruction-cache entries corresponding memory regions that
+  do _not_ have both the cacheability and coherence PMAs are removed.
+- The instruction buffer is flushed.
 
-NOTE: This property retains FENCE.I's pre-Ziccid semantics for non-cacheable
-and/or non-coherent memory.
-
-Finally, the FENCE.I instruction flushes the instruction buffer.
+NOTE: Removing instruction-cache entries corresponding to non-cacheable and/or
+non-coherent memory regions is necessary and sufficient to maintain FENCE.I's
+pre-Ziccid semantics with respect to such regions.
