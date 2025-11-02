@@ -177,7 +177,7 @@ address, as part of becoming globally visible.
 
 The FENCE.I instruction performs the following operations sequentially:
 
-- All of the hart's older stores become globally visible.
+- All of the hart's older explicit memory accesses become globally visible.
 - All of the hart's instruction-cache entries corresponding memory regions that
   do _not_ have both the cacheability and coherence PMAs are removed.
 - The instruction buffer is flushed.
