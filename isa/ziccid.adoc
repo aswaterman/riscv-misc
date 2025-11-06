@@ -163,9 +163,8 @@ NOTE: Therefore, absent the execution of a FENCE.I instruction,
 stores do not _immediately_ become visible to subsequent instruction fetches,
 though they do _eventually_ become visible to subsequent instruction fetches.
 
-Instructions are executed in program order, but explicit memory accesses to
-which instructions give rise may be reordered in any manner consistent with
-RVWMO.
+Instructions are executed in program order, but instructions' explicit memory
+accesses may be reordered in any manner consistent with RVWMO.
 
 NOTE: Executing a `fence w,w` instruction between two store instructions, for
 example, suffices to guarantee that the second store will not become visible
