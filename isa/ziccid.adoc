@@ -119,8 +119,8 @@ li t1, 0x4585                                   c.li a1, 0
 sh t1, (t0)   # patch_me := c.li a1, 1          beqz a1, patch_me
 ```
 
-As is the case without the Ziccid extension, a store from the current hart can
-be made visible to the hart's instruction fetches in program order by
+As is the case without the Ziccid extension, software can make a store from
+the current hart visible to the hart's instruction fetches immediately by
 executing a FENCE.I instruction, or to a remote hart's instruction fetches by
 executing a FENCE then requesting (e.g. via IPI) that the remote hart execute
 a FENCE.I.
