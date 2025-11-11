@@ -181,6 +181,12 @@ matrix multiplication.
 
 image::bdota-ci.svg[Static, pdfwidth=7in, title="Zvbdota operation, VLEN > 8*EEW"]
 
+Destination elements with index {ge} `ci + 8` are tail elements and are
+managed with the current tail agnostic/undisturbed policy.
+Destination elements with index < `ci` are prestart elements and are left
+undisturbed.
+The remaining destination elements are the body elements.
+
 Each instruction is optionally masked by the `v0` mask register.
 If masked and the mask bit corresponding to the destination element in `vd` is clear,
 the corresponding dot product is not performed, and the destination element is updated
