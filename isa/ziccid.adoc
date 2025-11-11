@@ -1,4 +1,5 @@
 :le: &#8804;
+:ge: &#8805;
 
 == Ziccif Extension for Instruction-Fetch Atomicity, Version 1.0
 
@@ -14,7 +15,7 @@ instruction fetches of naturally aligned power-of-2 sizes of at most
 An implementation with the Ziccif extension fetches instructions in a manner
 equivalent to the following state machine.
 
-. Let `M` be `min(ILEN,XLEN)/8`, rounded up to the next power of 2.
+. Let `M` be the smallest power of 2 such that `M` {ge} `min(ILEN,XLEN)/8`.
 Let `N` be the `pc` modulo `M`.
 Atomically fetch `M` - `N` bytes from memory at address `pc`.
 Let `T` be the running total of bytes fetched, initially `M` - `N`.
@@ -22,16 +23,15 @@ Let `T` be the running total of bytes fetched, initially `M` - `N`.
 . If the `T` bytes fetched begin with a complete instruction of length `L` {le}
 `T`, then execute that instruction, discard the remaining `T` - `L` bytes
 fetched, and go back to step 1, using the updated `pc`.
-
-. Otherwise, atomically fetch `M` bytes from memory at address `pc` + `T`,
-increment `T` by `M`, and go back to step 2.
+Otherwise, atomically fetch `M` bytes from memory at address `pc` + `T`,
+increment `T` by `M`, and repeat step 2.
 
 [NOTE]
 ====
 The instruction-fetch atomicity rule supports concurrent code modification.
 If a hart modifies instruction memory that it, or other, harts might
 execute without first having executed a FENCE.I instruction, it should
-adhere to the following rules:
+adhere to the following rules to ensure predictable behavior:
 
 - Modification stores must be single-copy atomic, hence must be naturally
 aligned.
