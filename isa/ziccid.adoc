@@ -122,7 +122,7 @@ sh t1, (t0)   # patch_me := c.li a1, 1          beqz a1, patch_me
 As is the case without the Ziccid extension, software can make a store from
 the current hart visible to the hart's instruction fetches immediately by
 executing a FENCE.I instruction, or to a remote hart's instruction fetches by
-executing a FENCE then requesting (e.g. via IPI) that the remote hart execute
+executing a data FENCE, then requesting (e.g. via IPI) that the remote hart execute
 a FENCE.I.
 ====
 
@@ -137,7 +137,7 @@ conjunction with the latter.
 An implementation with the Ziccid extension behaves in a manner consistent
 with the following operational model.
 
-Harts have two operational stages: instruction fetch and execution.
+Harts have two ordered operational stages: instruction fetch and execution.
 Each hart has an instruction cache and an instruction buffer of bounded
 capacity.
 Instructions are fetched in program order from the instruction cache, then
@@ -146,7 +146,7 @@ If an instruction is not present in the instruction cache, the instruction is
 read from memory, inserted into the cache, then inserted into the instruction
 buffer in program order.
 
-For each instruction byte read from memory into the instruction cache, memory
+For each instruction byte fetched from memory into the instruction cache, memory
 supplies the value written by the most recent store that precedes the read in
 global memory order.
 
@@ -177,7 +177,7 @@ address, as part of becoming globally visible.
 The FENCE.I instruction performs the following operations sequentially:
 
 - All of the hart's older explicit memory accesses become globally visible.
-- All of the hart's instruction-cache entries corresponding memory regions that
+- All of the hart's instruction-cache entries corresponding to memory regions that
   do _not_ have both the cacheability and coherence PMAs are removed.
 - The instruction buffer is flushed.
 
