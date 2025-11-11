@@ -184,7 +184,7 @@ image::bdota-ci.svg[Static, pdfwidth=7in, title="Zvbdota operation, VLEN > 8*EEW
 Each instruction is optionally masked by the `v0` mask register.
 If masked and the mask bit corresponding to the destination element in `vd` is clear,
 the corresponding dot product is not performed, and the destination element is updated
-in accordance with the mask policy in `vtype`.`vma`.
+in accordance with the current mask agnostic/undisturbed policy.
 
 The following pseudocode describes the instructions' operation:
 
