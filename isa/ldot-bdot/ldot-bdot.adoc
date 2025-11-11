@@ -29,6 +29,9 @@ compute a dot product between two vector register groups, identified by
 `vs2` and `vs1`, producing a scalar result that is accumulated into element
 0 of vector register `vd`.
 
+The other elements in `vd` (0 < index < VLEN/SEW) are considered the tail and
+are managed with the current tail agnostic/undisturbed policy.
+
 The `vs2` and `vs1` register groups have EMUL=LMUL and EEW=SEW.
 The `vd` register always has EMUL=1; its EEW depends on the instruction.
 
