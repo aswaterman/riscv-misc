@@ -29,16 +29,17 @@ increment `T` by `M`, and repeat step 2.
 [NOTE]
 ====
 The instruction-fetch atomicity rule supports concurrent code modification.
-If a hart modifies instruction memory that it, or other, harts might
-execute without first having executed a FENCE.I instruction, it should
-adhere to the following rules to ensure predictable behavior:
+When a hart modifies instruction memory and either it or another hart executes
+the modified instructions without first having executing a FENCE.I, the
+modifying hart should adhere to the following rules to ensure predictable
+behavior:
 
 - Modification stores must be single-copy atomic, hence must be naturally
 aligned.
 
-- The modified instruction must not span an `M`-byte boundary,
+- The modified instruction must not span an aligned `M`-byte boundary,
 unless it is replaced with a shorter unconditional control transfer
-(e.g. `c.ebreak` or `c.j`) that does not itself span an `M`-byte
+(e.g., `c.ebreak` or `c.j`) that does not itself span an `M`-byte
 boundary.
 
 - Modification stores must alter a complete instruction or complete
@@ -46,7 +47,7 @@ instructions that do not collectively span an `M`-byte boundary,
 modulo the exception above that the first part of an instruction may be
 replaced with an unconditional control transfer instruction.
 
-- Modifications may not combine smaller instructions into a larger
+- Modifications must not combine smaller instructions into a larger
 instruction but may convert a larger instruction to some number of
 smaller instructions.
 
@@ -60,8 +61,8 @@ Because ILEN must be at least the width of the instruction being modified,
 a lower bound on `M` can be inferred from the instruction's width and XLEN.
 ====
 
-Memory protection is applied only to bytes that are not discarded by this
-algorithm.
+Memory protection and executability PMAs are applied only to bytes that are
+not discarded by this algorithm.
 
 [NOTE]
 ====
@@ -97,7 +98,7 @@ instruction-cache coherence.
 The in-order fetch property, expected by some JIT compilers, is also
 provided naturally by most straightforward microarchitectures.
 An example of a technique that might violate this property, however, is an
-instruction buffer that is populated out of program order, e.g. while fetching
+instruction buffer that is populated out of program order, e.g., while fetching
 down the predicted path following an instruction-cache miss.
 Example solutions include buffering instructions only in program order, or
 keeping the buffer coherent by making the coherent instruction cache inclusive
@@ -122,8 +123,8 @@ sh t1, (t0)   # patch_me := c.li a1, 1          beqz a1, patch_me
 As is the case without the Ziccid extension, software can make a store from
 the current hart visible to the hart's instruction fetches immediately by
 executing a FENCE.I instruction, or to a remote hart's instruction fetches by
-executing a data FENCE, then requesting (e.g. via IPI) that the remote hart execute
-a FENCE.I.
+executing a data FENCE, then requesting (e.g., via interprocessor interrupt)
+that the remote hart execute a FENCE.I.
 ====
 
 The Ziccid extension depends on the Ziccif extension.
@@ -146,6 +147,8 @@ If an instruction is not present in the instruction cache, the instruction is
 read from memory, inserted into the cache, then inserted into the instruction
 buffer in program order.
 
+An instruction fetch is a memory read operation that appears in the global
+memory order.
 For each instruction byte fetched from memory into the instruction cache, memory
 supplies the value written by the most recent store that precedes the read in
 global memory order.
@@ -160,7 +163,7 @@ After some amount of time, instructions are dequeued in program order from the
 instruction buffer and executed.
 
 NOTE: Therefore, absent the execution of a FENCE.I instruction,
-stores do not _immediately_ become visible to subsequent instruction fetches,
+stores do not necessarily become visibile immediately to subsequent instruction fetches,
 though they do _eventually_ become visible to subsequent instruction fetches.
 
 Instructions are executed in program order, but instructions' explicit memory
@@ -172,7 +175,7 @@ to any instruction fetch before the first store does.
 
 Stores to memory regions with both the cacheability and coherence PMAs
 remove all harts' instruction-cache entries corresponding to the same
-address, as part of becoming globally visible.
+physical address, as part of becoming globally visible.
 
 The FENCE.I instruction performs the following operations sequentially:
 
