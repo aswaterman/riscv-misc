@@ -122,9 +122,15 @@ sh t1, (t0)   # patch_me := c.li a1, 1          beqz a1, patch_me
 
 As is the case without the Ziccid extension, software can make a store from
 the current hart visible to the hart's instruction fetches immediately by
-executing a FENCE.I instruction, or to a remote hart's instruction fetches by
-executing a data FENCE, then requesting (e.g., via interprocessor interrupt)
-that the remote hart execute a FENCE.I.
+executing a FENCE.I instruction.
+Software can make a store from the current hart visible to another hart's
+instruction fetches by executing a FENCE W,O instruction, then sending an
+interprocessor interrupt to the remote hart, requesting that it execute
+a FENCE.I instruction.
+Alternatively, the current hart can execute a FENCE W,W instruction, then
+write a flag in memory; upon observing the flag write, the remote hart
+executes a FENCE.I instruction.
+In neither case is a data FENCE required on the remote hart.
 ====
 
 The Ziccid extension depends on the Ziccif extension.
@@ -184,6 +190,18 @@ The FENCE.I instruction performs the following operations sequentially:
   do _not_ have both the cacheability and coherence PMAs are removed.
 - The instruction buffer is flushed.
 
-NOTE: Removing instruction-cache entries corresponding to non-cacheable and/or
-non-coherent memory regions is necessary and sufficient to maintain FENCE.I's
-pre-Ziccid semantics with respect to such regions.
+[NOTE]
+====
+The FENCE.I instruction in Ziccid is specified such that software written for
+non-Ziccid machines is compatible with Ziccid machines.
+
+For cacheable and coherent memory regions, the combination of removing
+instruction-cache entries upon global store visibility and flushing the
+instruction buffer on FENCE.I suffices to implement FENCE.I's pre-Ziccid
+semantics for those regions.
+
+For non-cacheable and/or non-coherent memory regions, the combination of
+removing all instruction-cache entries corresponding to those regions and
+flushing the instruction buffer on FENCE.I suffices to implement FENCE.I's
+pre-Ziccid semantics for those regions.
+====
