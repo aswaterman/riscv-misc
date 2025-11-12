@@ -153,8 +153,6 @@ If an instruction is not present in the instruction cache, the instruction is
 read from memory, inserted into the cache, then inserted into the instruction
 buffer in program order.
 
-An instruction fetch is a memory read operation that appears in the global
-memory order.
 For each instruction byte fetched from memory into the instruction cache, memory
 supplies the value written by the most recent store that precedes the read in
 global memory order.
