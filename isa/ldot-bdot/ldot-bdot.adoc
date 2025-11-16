@@ -537,7 +537,18 @@ Formally, bulk normalization is characterized by multiple parameters:
 
 `o` is defined to accommodate any carry overflow and is defined to be `ceil(log2(n))`.
 
-The number of guard bits, `g`, is also defined to be `ceil(log2(n))`.
+The number of guard bits, `g`, is defined to be `ceil(log2(n))`.
+
+Note:: It is expected that `n` would be a constant defined by each operation/implementation using RVBNA.
+`n` is not expected to depend on a dynamic parameter such as `vl`. Dot product operations are still allowed to use `vl` or any dynamic length parameter but are encouraged to not link this to the bulk normalization parameters (which is similar to assuming identity-value products are injected in place of inactive elements).
+`n` may vary depending on the element width (e.g. be different for different values of `SEW`).
+
+Note:: Given the recommendation made on `n`, RVBNA mandates a fixed value of `g` for a given format size.
+This reduces the space of possible implementations. An implementation using RVBNA for different formats with different `n` values requires support for multiple values of `g`.
+Supporting multiple values of `g` is straightforward: an implementation can build a shared accumulator datapath based on the maximum `g` value: gmax.
+Behavior for smaller `g` values would be obtained by OR-reducing both the sticky bits defined by `gmax` and the extra `gmax - g` least significant bits of the aligned products into the least significant accumulator bit. This should not require more than a few extra gates for hardware implementations.
+
+Note:: In its current version, RVBNA is only defined for symmetric products (i.e., both factors have the same `e` and `p`). It could be later extended to asymmetric products (mixed formats) if the need arises.
 
 Informally, RVBNA works as follows:
 
@@ -589,9 +600,13 @@ BulkNormalizedDotProduct(A[n], B[n]) {
 
 
    // predicate output special cases
+   // expected Not a Number (NaN) result
    let nanResult = false
+   // expected infinite result
+   let infiniteResult = false
+   // invalid operation flag
    let invalidFlag = false
-   let infinite = false
+   // sign of infinite result
    let infiniteSign = 0
 
     // determining maximum reference exponent
@@ -625,9 +640,9 @@ BulkNormalizedDotProduct(A[n], B[n]) {
         let infiniteProdLHS = (A_i_isInf && !B_i_isNaN  && !B_i_isZero)
         let infiniteProdRHS = (B_i_isInf && !A_i_isNaN  && !A_i_isZero)
         let infiniteProd = infiniteProdLHS || infiniteProdRHS
-        let invalidSum = infinite && infiniteProd && (infiniteSign != prodSigns[i])
+        let invalidSum = infiniteResult && infiniteProd && (infiniteSign != prodSigns[i])
 
-        infinite ||= infiniteProd
+        infiniteResult ||= infiniteProd
         invalidFlag ||= invalidProd || invalidSum || A_i_isSNaN || B_i_isSNaN
         infiniteSign = infiniteProd ? prodSigns[i] : infiniteSign
 
@@ -654,7 +669,7 @@ BulkNormalizedDotProduct(A[n], B[n]) {
         }
         // canonical quiet NaN
         return (overflowExp << (q - 1)) | (1 << (q - 2))
-    } else if (infinite) {
+    } else if (infiniteResult) {
         return (infiniteSign << (q + f - 1)) | (overflowExp << (q - 1))
     }
 
@@ -727,6 +742,11 @@ BulkNormalizedDotProduct(A[n], B[n]) {
 Note:: In the current specification the most significant bit of the max product has a weight of `max_exp + 1`, which means that there are `q-2+g` fractional bits in the max product. `g` could be increased to `ceil(log2(n)) + 1` to ensure the number of fractional bits is at least `q-1` (identical to the output format). Numerical impacts of the value of `g` have not been evaluated. 
 
 Note:: Any one of the `2*p` bits of the max product can be the leading bit due to leading zeros in subnormal inputs. It is also possible for the maximum product to have more leading zeros than the other products (including when product alignment is taken into account). This is discussed in more detailed in the next section <<#RVBNAReferenceExponent>>.
+
+Note:: The RVBNA pseudocode assumes that operands are IEEE encoded, but this is not actually a requirement of RVBNA.
+The pseudocode can easily be generalized to other floating-point encodings (e.g. Open Compute OFP formats).
+The actual requirement is to used biased exponent to compute the reference exponent and not real exponent (in particular because we want to avoid normalizing subnormal operands before computing the reference exponent).
+The significand also need to be materialized correctly for the product (including possible implicit digit(s)).
 
 [#RVBNAReferenceExponent]
 ==== Reference Exponent
