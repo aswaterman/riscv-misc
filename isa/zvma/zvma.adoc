@@ -114,12 +114,15 @@ element width only doubles.  The storage of each TEW=32 tile is
 divided to form two TEW=64 tiles (e.g. `mt0` for TEW=32 forms `mt0`
 and `mt2` for TEW=64).
 
+The parameter ETE describes the tile dimensions as a function of TEW:
+`ETE = TEW < 64 ? TE : TE / 2`.
+
 Additional ISA extensions describe the tile dimensions.
 The Zvma__N__t extension indicates `TE` {ge} `__N__`, e.g.
 Zvma32t indicates TE is at least 32.
 
 NOTE: The accumulator array dimensions (TE) may be determined dynamically with
-the `vset[i]vl[i]` instructions to enable writing TE-agnostic software.
+the `msettn` instruction to enable writing TE-agnostic software.
 
 ==== Tile Punning
 The tile state is reshaped for each supported TEW which results in
@@ -202,40 +205,26 @@ unsigned punning (
 }
 ----
 
-=== Additions to `vtype` CSR
+=== Matrix Type (`mtype`) CSR
 
-The `tm`, `tk`, and `vtwiden` fields are added to the existing `vtype`
-CSR in previously reserved space.
+The Zvmabase extension adds a new unprivileged read-only CSR, `mtype`,
+with address 0xC23.  It contains the following fields:
 
 ----
-bits   field
-XLEN-1 vill
-   30  reserved
-29:16  tm[13:0]
-15:14  reserved
-13:11  tk[2:0]
-10:9   vtwiden[1:0]
-   8   altfmt
-   7   vma
-   6   vta
- 5:3   vsew[2:0]
- 2:0   vlmul[2:0]
+bits      field
+XLEN-1:24 reserved
+    23:10 tm[13:0]
+     9:7  reserved
+     6:5  tk[2:0]
+     4:2  reserved
+     1:0  mtwiden[1:0]
 ----
 
 `tm` can hold values from 0-TE, inclusive.
 
 `tk` can hold values from 0-4, inclusive.
 
-`tn` is given by the value in the `vl` register.
-
-If the Zvma32a16f extension is implemented, `altfmt` may be set to 1
-when SEW=16 (indicating BF16).  Selecting `altfmt`=1 for other SEW
-settings is reserved.
-
-NOTE: We expect most implementations will set `vill` in `vtype` when
-a reserved combination of `altfmt` and SEW is selected.
-
-If `vtwiden`==0, the matrix unit is not configured.
+If `mtwiden`=0, the matrix unit is not configured.
 
 === Matrix-Multiply Operations
 
@@ -252,9 +241,10 @@ encoding.
 
 image::Operand.svg[Static, title="A or B Matrix Operand"]
 
-The values of `tm`, `tn`, and `tk` are obtained from CSRs, with `tn`
-being an alias for the existing `vl` register.  `tm` and `tk` are
-fields in the existing `vtype` register.  The new configuration
+The values of `tm`, `tn`, and `tk` are obtained from CSRs.
+`tm` and `tk` are fields in the `mtype` register.
+`tn` is derived from `vl`; it is equal to `min(vl, ETE)`.
+The new configuration
 instructions described below allow the values of `tm`, `tn`, and `tk`
 to be set in an implementation-agnostic manner from the application
 matrix dimensions.
@@ -311,122 +301,125 @@ NOTE: More optimized routines are possible when microarchitectural
 parameters are known to software.
 
 The actual size of a matrix-multiply operation is determined by values
-in two CSRs, `tk` and `tm` are fields in the `vtype` register, `tn`
-is the same as the `vl` register.  These CSRs are set using configuration
+in two CSRs: `tk` and `tm` are fields in the `mtype` register; `tn`
+is derived from the `vl` register.  These CSRs are set using configuration
 instructions.
 ----
 Encoding of vector and matrix configuration instructions
 
- 31 30         25 24      20 19      15 14   12 11      7 6     0
- 0 |        zimm[10:0]      |    rs1   | 1 1 1 |    rd   |1010111| vsetvli
- 1 |   1|  zimm[ 9:0]       | uimm[4:0]| 1 1 1 |    rd   |1010111| vsetivli
- 1 |   000000    |   rs2    |    rs1   | 1 1 1 |    rd   |1010111| vsetvl
+ 31 30    25 24       23 22 20 19        15  14 12 11    7 6     0
+ 0 |        zimm[10:0]        |    rs1     | 111 |  rd   |1010111| vsetvli
+ 1 | 1|     zimm[ 9:0]        | uimm[4:0]  | 111 |  rd   |1010111| vsetivli
+ 1 | 000000 |       rs2       |    rs1     | 111 |  rd   |1010111| vsetvl
 
- 1 |   000010    |   00000  |   rs1/ATN| 1 1 1 |    rd   |1010111| vsettn
- 1 |   000010    |   00001  |   rs1/ATM| 1 1 1 |    rd   |1010111| vsettm
- 1 |   000010    |   00010  |   rs1/ATK| 1 1 1 |    rd   |1010111| vsettk
- 1        6            5          5        3        5        7
-
-ATM is application matrix m dimension
-ATN is application matrix n dimension
-ATK is application matrix k dimension
+ 1 | 000001 |       rs2       |    rs1     | 111 | 00000 |1010111| msetmtype
+ 1 | 000010 |    00     | 000 |    rs1     | 111 |  rd   |1010111| msettn
+ 1 | 000010 |    00     | 001 |    rs1     | 111 |  rd   |1010111| msettm
+ 1 | 000010 |    00     | 010 |    rs1     | 111 |  rd   |1010111| msettk
+ 1 | 000010 | vsew[1:0] | 011 | mtype[4:0] | 111 | 00000 |1010111| msetmtypei
+ 1      6         3        2        5         3      5       7
 ----
 
-The existing `vset[i]vl[i]` instructions are used to configure the hart
-to execute Zvma instructions.
-These instructions behave as defined in the V extension, but their behavior
-is modified when the requested `vtype` value has `vtwiden` != 0.
-In particular, the `vsew` and `vtwiden` fields are set as requested, but other
-fields in `vtype` are determined using special rules described below.
-AVL is determined as described in the V spec, but the new `vl` is determined
-using a special rule described below.
-`rd` is written with the new value of `vl`, as usual.
-Although `vill` is set under different rules, as described below, the behavior
-remains that if `vill` is set, then the other bits in `vtype`, as well as `vl`,
-are set to zero.
+The existing `vset[i]vl[i]` instructions write zero to the `mtype` CSR.
+
+The `msetmtype` instruction writes the `mtype` and `vtype` CSRs to the values
+in the `rs1` and `rs2` registers.
+First, `vl` is written with 0, and `mtype` is written with the value in `rs1`.
+Then, `vtype` is written with the value in `rs2`, as though by a `vsetvl`
+instruction.
+Finally, if the new `mtype`.`mtwiden` != 0, then `vma` and `vta` are set to 1,
+`vill` is set if the resulting TEW is unsupported,
+and `vlmul` is set as follows:
 
 ----
-vset[i]vl[i] behavior when requested vtype.vtwiden != 0
+msetmtype behavior:
 
-TEW = SEW * TWIDEN
-ETE = TEW < 64 ? TE : TE/2 // Effective number of elements along tile edge
-EVE = VLEN/SEW             // Effective number of elements in a vector register
+vl = 0
+mtype = rs1
+vtype = rs2 (following vsetvl semantics)
 
-LMUL = min(8/KMAX, 8/TWIDEN, ceil(ETE/EVE))
-              ^        ^           ^
-              |        |           +-matrix engine size constraint
-              |        +-matrix row/col must fit in vector register group
-              +-leave space for K dimension
+if mtype.mtwiden == 0:
 
-tn/vl = min(AVL, LMUL*EVE, ETE)  // AVL is as defined in V spec
-tm = min(ATM, LMUL*EVE, ETE)     // ATM comes from requested vtype.tm
-tk = min(ATK, KMAX)              // ATK comes from requested vtype.tk
-altfmt = ALTFMT                  // ALTFMT comes from requested vtype.altfmt
-vma = 1
-vta = 1
+  mtype.tk = 0
+  mtype.tm = 0
 
-vill = (TEW > ELEN) || (any reserved field in vtype != 0)
+else:
 
-rd = tn/vl
+  let TEW = SEW * TWIDEN
+  let ETE = TEW < 64 ? TE : TE/2 // Effective number of elements along tile edge
+  let EVE = VLEN/SEW             // Effective number of elements in a vector register
+
+  vtype.vlmul = lg(min(8/KMAX, 8/TWIDEN, ceil(ETE/EVE)))
+                        ^        ^           ^
+                        |        |           +-matrix engine size constraint
+                        |        +-matrix row/col must fit in vector register group
+                        +-leave space for K dimension
+
+  vtype.vma = 1
+  vtype.vta = 1
+
+  vtype.vill |= (SEW * TWIDEN > ELEN)
+
+  mtype.tk = min(mtype.tk, KMAX)
+  mtype.tm = min(mtype.tm, LMUL*EVE, ETE)
 ----
 
-A new assembler pseudo-op, `vsettnt` ("set tn and type") is provided to
-simplify using the `vsetvli` instruction for Zvma purposes.
-
-----
-// vsetvli rd, rs1, (vsew << 3) + (alt << 8) + (vtwiden << 9)
-vsettnt rd, rs1, eX, wY
-
-The valid `wY` and `eX` options are as follows.
-
-vtwiden    assembler syntax
-01        w1
-10        w2
-11        w4
-
-vsew alt  assembler syntax
-00     0  e8
-01     0  e16
-01     1  e16alt
-10     0  e32
-11     0  e64
-
-An `eX, wY` combination is valid if and only if X * Y <= ELEN.
-----
-
-NOTE: `w0` is not supported--this behavior is achieved by the existing
-`vset[i]vl[i]` instructions--and assemblers should reject it.
-
-==== `vsettm`, `vsettn`, and `vsettk` instructions
-
-These instructions set `tm`, `tn`, or `tk` to the value in `rs1`,
-constrained by the current matrix configuration.
-The new value of `tm`, `tn`, or `tk` is also written to the scalar destination
-register `rd`.
-If the matrix unit has not been configured, i.e. `vtwiden`=0 in `vtype`, the
-instruction sets `vill` in `vtype`.
+The `msetmtypei` instruction is defined similarly, except the new `mtype` CSR
+value is supplied by a zero-extended immediate, the new `vtype`.`vsew` field
+value is supplied by a zero-extended immediate, and all other `vtype` fields
+are zeroed.
 
 These instructions are included in the Zvmabase extension.
 
+==== `msettn` instruction
+
+This instruction sets `tn`/`vl` to the value in `rs1`, constrained by the
+current matrix configuration.
+If the matrix unit is not configured, i.e. `mtwiden`=0, the instruction writes
+`vl` as if by a `vsetvl` instruction using the current `vtype` setting.
+The new value of `tn`/`vl` is also written to the scalar destination register `rd`.
+
 ----
-vsettm rd, rs1  // rd = tm = min(rs1=ATM, LMUL*EVE, ETE)
+msettn behavior:
+
+if mtype.mtwiden == 0:
+  rd = vl = rs1 (following vsetvl semantics)
+else:
+  rd = vl = min(rs1, LMUL*EVE, ETE)
 ----
 
-The `vsettm` instruction sets `tm` to be the lesser of `rs1` (ATM),
+NOTE: The `msetmtype` and `msettn` instructions are intended to be used by
+context-switching routines.
+Because their semantics degenerate to those of `vsetvl` when the matrix unit
+is not configured, the usual `vsetvl` can be replaced with `msetmtype` and
+`msettn`; there is no need to use a dynamic branch to select between the
+two schemes.
+
+This instruction is included in the Zvmabase extension.
+
+==== `msettm` and `msettk` instructions
+
+These instructions set `tm` or `tk` to the value in `rs1`,
+constrained by the current matrix configuration.
+If the matrix unit has not been configured, i.e. `mtwiden`=0,
+the new `tm` or `tk` value is 0.
+The new value of `tm` or `tk` is also written to the scalar destination
+register `rd`.
+
+----
+msettm rd, rs1  // rd = tm = ((mtwiden == 0) ? 0 : min(rs1, LMUL*EVE, ETE))
+----
+
+The `msettm` instruction sets `tm` to be the lesser of `rs1`,
 `LMUL`*`EVE`, and `ETE`.
 
 ----
-vsettn rd, rs1  // rd = tn/vl = min(rs1=ATN, LMUL*EVE, ETE)
+msettk rd, rs1  // rd = tk = ((mtwiden == 0) ? 0 : min(rs1, KMAX))
 ----
 
-The `vsettn` instruction sets `tn` to be the lesser of `rs1` (ATN),
-`LMUL`*`EVE`, and `ETE`.
+The `msettk` instruction sets `tk` to the lesser of `rs1` and KMAX.
 
-----
-vsettk rd, rs1  // rd = tk = min(rs1=ATK, KMAX)
-----
-
-The `vsettk` instruction sets `tk` to the lesser of `rs1` (ATK) and KMAX.
+These instructions are included in the Zvmabase extension.
 
 ==== Supported SEW, TWIDEN, and KMAX values
 
@@ -554,7 +547,7 @@ For these instructions, the body elements are those with indices in the range
 NOTE: Since `vl`=`tn` holds the number of columns in the accumulator, i.e. the
 length of a row, these instructions are oriented towards loading and storing
 accumulator rows.
-When loading and storing accumulator columns, additional `vsetvli` or `vsettn`
+When loading and storing accumulator columns, additional `vsetvli` or `msettn`
 instructions may be needed to program `vl`=`tn` to hold the number of rows,
 i.e. the length of a column, instead.
 
@@ -662,6 +655,10 @@ accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd.
 Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
 rounding mode specified by `frm`.
 
+If the Zvma32a16f extension is implemented, the implementation must support
+`altfmt`=1 when SEW=16 (indicating BF16).
+Selecting `altfmt`=1 for other SEW settings is reserved.
+
 ==== FP4 Matrix Arithmetic
 
 Support for 4-bit floating-point operands is provided through packed matrix
@@ -718,7 +715,7 @@ submatrix of the destination tile.
 Any tile elements outside the range [0, tm-1] x [0, tn-1] are
 considered part of the tail and are handled using a tail-agnostic
 policy.
-If the matrix has not been configured, i.e. `vtwiden`=0 in `vtype`,
+If the matrix has not been configured, i.e. `mtwiden`=0,
 an illegal-instruction exception is raised.
 This instruction is included in the Zvmabase extension.
 
@@ -732,6 +729,13 @@ vtzero.t mtd
 
 === Context Status
 
+The `mtype` CSR is considered part of the vector context; access to this
+CSR is controlled by the various `VS` fields.
+
+As described below, additional `MS` context-status fields are added to reduce
+the cost of saving and restoring the tile state.
+These fields do not affect accessibility of the `mtype` CSR.
+
 ==== Zvma Context Status in `mstatus`
 
 A Zvma context status field, `MS`, is added to `mstatus[30:29]` and shadowed
@@ -740,7 +744,7 @@ status field, `FS`.
 
 Attempts to execute any instruction that accesses the tile state raises an
 illegal-instruction exception when `mstatus`.MS is set to Off.
-Note, the `vset*` instructions do not access the tile state.
+Note, the `vset*` and `mset*` instructions do not access the tile state.
 
 When `mstatus`.MS is set to Initial or Clean, executing any instruction that
 changes tile state will change `mstatus`.MS to Dirty.
@@ -795,7 +799,7 @@ and `vsstatus`.MS=Off).  Otherwise, it changes `mstatus`.MS to Initial
 This instruction is included in the Zvmabase extension.
 
 `vtdiscard` raises an illegal-instruction exception if `vtype`.vill=1, but
-does not raise an exception as a result of `vtype`.`vtwiden` being zero.
+does not raise an exception as a result of `mtype`.`mtwiden` being zero.
 
 NOTE: `vtdiscard` does not actually write the tile state.  For ABI
 purposes, the tile state becomes UNPREDICTABLE as a result of executing
