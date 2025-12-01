@@ -127,10 +127,31 @@ tiles being combined to support wider accumulators. For example,
 4 TEW=8 tiles (mt0..3) are combined to support a single TEW=32 tile
 (mt0).
 
-Given the layout of elements for each TEW in the tile, there is an
-aliasing of the differently sized elements in the combined space.
-The aliasing is a repetitive pattern of 4x4 (2x2 TEW=64) sub-matrices
-of elements as illustrated in the following figure.
+[NOTE]
+====
+Most software consistently accesses a tile using the same TEW, and so
+is indifferent to the interpretation of the tile under other TEWs.
+However, there are cases where software must access elements in a tile
+without knowing the TEW with which it was most recently written,
+including context switching and debugging.
+In particular, migrating contexts between harts with different
+tile-punning schemes is impractical.
+Hence, it is highly desirable to fix the tile-punning scheme.
+
+Architecturally tagging the tiles with their TEWs has been proposed as an
+alternative to mandating a tile-punning scheme.
+Alas, the fact that tiles can be accessed in both rows and columns makes this
+scheme impractically expensive: every byte would need its own type tag.
+
+We chose this particular layout because it enables efficient access to
+elements by both row and column, supporting consecutive accesses in either
+dimension without overly favoring one over the other.
+====
+
+The following figure illustrates how elements are combined and
+aliased across supported TEWs.
+
+NOTE: For better legibility, the figure uses an unsupported size of TE=4.
 
 image::TilePunning.svg[Static, title="Tile Punning Aliasing"]
 
@@ -138,35 +159,47 @@ Viewing the tile state as a linearized buffer of 16 * TE * TE bytes,
 an element's position can be determined with the following algorithm.
 
 ----
-  Given,
-    tile:    tile
-    tew:     element size
-    row,col: element indices
+unsigned punning (
+  const unsigned TE,  // tile array dimension TExTE
+  unsigned tile,      // addressed tile
+  unsigned row,       // tile row index
+  unsigned col,       // tile col index
+  unsigned tew        // tile element width
+) {
+  unsigned ptile, minor_offset, major_offset;
 
-  case (tew) {
-    8: {
-      ptile = tile
-      minor_offset = (row % 4) * 4 + (col % 4)
-      major_offset = (row / 4) * (TE / 4) + (col / 4)
+  switch (tew) {
+    case 8: {
+      ptile = tile;
+      minor_offset = (row % 4) * 4 + (col % 4);
+      major_offset = (row / 4) * (TE / 4) + (col / 4);
+      break;
     }
-    16: {
-      ptile = tile + ((row & 2) >> 1)
-      minor_offset = (row % 2) * 4 + (col % 2) * 2 + ((col / 2) % 2) * 8
-      major_offset = (row / 4) * (TE / 4) + (col / 4)
+    case 16: {
+      ptile = tile + ((row & 2) >> 1);
+      minor_offset = (row % 2) * 4 + (col % 2) * 2 + ((col / 2) % 2) * 8;
+      major_offset = (row / 4) * (TE / 4) + (col / 4);
+      break;
     }
-    32: {
-      ptile = tile + (row & 2) + ((col & 2) >> 1)
-      minor_offset = (row % 2) * 8 + (col % 2) * 4
-      major_offset = (row / 4) * (TE / 4) + (col / 4)
+    case 32: {
+      ptile = tile + 2 * (row / (TE / 2)) + ((col & 2) >> 1);
+      minor_offset = (row % 2) * 8 + (col % 2) * 4;
+      major_offset = ((row / 2) % (TE / 4)) * (TE / 4) + (col / 4);
+      break;
     }
-    64: {
-      ptile = tile + (row & 1)
-      minor_offset = (col % 2) * 8
-      major_offset = (row / 2) * (TE / 4) + (col / 2)
+    case 64: {
+      ptile = tile + (row / (TE / 4));
+      minor_offset = (col % 2) * 8;
+      major_offset = (row % (TE / 4)) * (TE / 4) + (col / 2);
+      break;
     }
+    default: return 0;
   }
 
-  offset = (ptile * TE * TE) + (major_offset * 16) + minor_offset
+  unsigned offset = (ptile * TE * TE) + (major_offset * 16) + minor_offset;
+
+  return offset;
+}
 ----
 
 === Additions to `vtype` CSR
