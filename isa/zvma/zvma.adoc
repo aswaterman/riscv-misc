@@ -114,12 +114,15 @@ element width only doubles.  The storage of each TEW=32 tile is
 divided to form two TEW=64 tiles (e.g. `mt0` for TEW=32 forms `mt0`
 and `mt2` for TEW=64).
 
+The parameter ETE describes the tile dimensions as a function of TEW:
+`ETE = TEW < 64 ? TE : TE / 2`.
+
 Additional ISA extensions describe the tile dimensions.
 The Zvma__N__t extension indicates `TE` {ge} `__N__`, e.g.
 Zvma32t indicates TE is at least 32.
 
 NOTE: The accumulator array dimensions (TE) may be determined dynamically with
-the `vset[i]vl[i]` instructions to enable writing TE-agnostic software.
+the `msettype` instruction to enable writing TE-agnostic software.
 
 ==== Tile Punning
 The tile state is reshaped for each supported TEW which results in
@@ -202,31 +205,28 @@ unsigned punning (
 }
 ----
 
-=== Additions to `vtype` CSR
+=== Matrix Type (`mtype`) CSR
 
-The `tm`, `tk`, and `vtwiden` fields are added to the existing `vtype`
-CSR in previously reserved space.
+The Zvmabase extension adds a new unprivileged read-only CSR, `mtype`,
+with address 0xC23.  It contains the following fields:
 
 ----
-bits   field
-XLEN-1 vill
-   30  reserved
-29:16  tm[13:0]
-15:14  reserved
-13:11  tk[2:0]
-10:9   vtwiden[1:0]
-   8   altfmt
-   7   vma
-   6   vta
- 5:3   vsew[2:0]
- 2:0   vlmul[2:0]
+bits      field
+XLEN-1:30 reserved
+    21:8  tm[13:0]
+     7:6  reserved
+     5:3  tk[2:0]
+       2  reserved
+     1:0  vtwiden[1:0]
 ----
 
 `tm` can hold values from 0-TE, inclusive.
 
 `tk` can hold values from 0-4, inclusive.
 
-`tn` is given by the value in the `vl` register.
+If `vtwiden`==0, the matrix unit is not configured.
+
+=== Additions to `vtype` CSR
 
 If the Zvma32a16f extension is implemented, `altfmt` may be set to 1
 when SEW=16 (indicating BF16).  Selecting `altfmt`=1 for other SEW
@@ -234,8 +234,6 @@ settings is reserved.
 
 NOTE: We expect most implementations will set `vill` in `vtype` when
 a reserved combination of `altfmt` and SEW is selected.
-
-If `vtwiden`==0, the matrix unit is not configured.
 
 === Matrix-Multiply Operations
 
@@ -252,9 +250,10 @@ encoding.
 
 image::Operand.svg[Static, title="A or B Matrix Operand"]
 
-The values of `tm`, `tn`, and `tk` are obtained from CSRs, with `tn`
-being an alias for the existing `vl` register.  `tm` and `tk` are
-fields in the existing `vtype` register.  The new configuration
+The values of `tm`, `tn`, and `tk` are obtained from CSRs.
+`tm` and `tk` are fields in the `mtype` register.
+`tn` is derived from `vl`; it is equal to `min(vl, ETE)`.
+The new configuration
 instructions described below allow the values of `tm`, `tn`, and `tk`
 to be set in an implementation-agnostic manner from the application
 matrix dimensions.
@@ -331,6 +330,11 @@ ATM is application matrix m dimension
 ATN is application matrix n dimension
 ATK is application matrix k dimension
 ----
+
+The existing `vset[i]vl[i]` instructions write zero to the `mtype` CSR.
+
+The `msetmtype` instruction sets `vtwiden` to the specified immediate value;
+
 
 The existing `vset[i]vl[i]` instructions are used to configure the hart
 to execute Zvma instructions.
@@ -731,6 +735,12 @@ vtzero.t mtd
 ----
 
 === Context Status
+
+The `mtype` CSR is considered part of the vector context; access to this
+CSR is controlled by the various `VS` fields.
+
+As described below, additional context-status fields are added to reduce
+the cost of saving and restoring the tile state.
 
 ==== Zvma Context Status in `mstatus`
 
