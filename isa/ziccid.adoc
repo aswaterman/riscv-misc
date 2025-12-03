@@ -159,6 +159,9 @@ For each instruction byte fetched from memory into the instruction cache, memory
 supplies the value written by the most recent store that precedes the read in
 global memory order.
 
+NOTE: This property is distinct from than the load-value axiom, in that fetches
+do not observe the local hart's stores before other harts' fetches can observe them.
+
 Instruction-cache entries may be removed at any time.
 Instruction-cache entries corresponding to arbitrary memory addresses
 may be inserted at any time.
