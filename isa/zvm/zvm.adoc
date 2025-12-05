@@ -76,7 +76,7 @@ on TEW.
 The ISA is optimized for the case where TEW=32, as this is the most
 common accumulator size.  When TEW=32, the tiles have dimensions TExTE
 elements, where TE is a parameter of the implementation.  TE is
-constrained to be a power of 2, VLEN/4 >= TE >= 4.  The upper bound is
+constrained to be a power of 2, such that VLEN/4 >= TE >= 4.  The upper bound is
 set by the requirement that a tile row or column must fit within a
 single vector register group (VLEN*8 bits).  Implementations may
 choose less than the maximum TE to reduce implementation cost.  The
@@ -153,8 +153,6 @@ dimension without overly favoring one over the other.
 
 The following figure illustrates how elements are combined and
 aliased across supported TEWs.
-
-NOTE: For better legibility, the figure uses an unsupported size of TE=4.
 
 image::TilePunning.svg[Static, title="Tile Punning Aliasing"]
 
@@ -338,13 +336,7 @@ vl = 0
 mtype = rs1
 vtype = rs2 (following vsetvl semantics)
 
-if mtype.mtwiden == 0:
-
-  mtype.tk = 0
-  mtype.tm = 0
-
-else:
-
+if mtype.mtwiden != 0:
   let TEW = SEW * TWIDEN
   let ETE = TEW < 64 ? TE : TE/2 // Effective number of elements along tile edge
   let EVE = VLEN/SEW             // Effective number of elements in a vector register
@@ -362,6 +354,12 @@ else:
 
   mtype.tk = min(mtype.tk, KMAX)
   mtype.tm = min(mtype.tm, LMUL*EVE, ETE)
+
+if vtype.vill:
+  vtype = 0
+
+if vtype.vill || mtype.mtwiden == 0:
+  mtype = 0
 ----
 
 The `msetmtypei` instruction is defined similarly, except the new `mtype` CSR
