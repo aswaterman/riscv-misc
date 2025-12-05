@@ -1,4 +1,4 @@
-= Zvma Family of Attached Matrix Extensions
+= Zvm Family of Attached Matrix Extensions
 Warning! This document describes an Attached Matrix Extensions proposal from SiFive. It is not an RVIA standard.
 :doctype: book
 :revnumber: v0.2
@@ -15,7 +15,7 @@ Warning! This document describes an Attached Matrix Extensions proposal from SiF
 
 == Overview
 
-The Zvma family of extensions supports high-throughput matrix-multiplication
+The Zvm family of extensions supports high-throughput matrix-multiplication
 computation.
 These extensions add new architectural state to each hart in the form of
 square matrix tiles.
@@ -35,35 +35,35 @@ the number of rows is given by K.
 The inner dimension K can be a maximum (KMAX) of 1, 2, or 4, depending on the
 data type of A and B.
 
-In addition, the Zvma extensions provide instructions to move rows and
+In addition, the Zvm extensions provide instructions to move rows and
 columns of the matrix arrays, either to and from the vector registers or to
 and from memory.
 
-The Zvmabase extension provides the new architectural state and the new
+The Zvmbase extension provides the new architectural state and the new
 configuration, move, load, store, and context-manipulation instructions.
 These instructions support tile EEW (TEW) values corresponding to all
 supported SEW settings (8..ELEN).
 
-The Zvma extensions build upon the vector extensions.
+The Zvm extensions build upon the vector extensions.
 The vector registers serve as a data source for matrix operands, and the
 existing vector instructions are used for pre- and post-processing of matrices.
-Hence, the Zvmabase extension requires the Zve32x extension.
+Hence, the Zvmbase extension requires the Zve32x extension.
 
-The Zvma extensions are compatible with the RV32E, RV32I, RV64E, and RV64I base
+The Zvm extensions are compatible with the RV32E, RV32I, RV64E, and RV64I base
 ISAs, but it is expected that RV64I will be by far the most common base-ISA
 choice.
 
-The following table lists the computational extensions in the Zvma family.
+The following table lists the computational extensions in the Zvm family.
 
 [cols="1,1,3,3", options="header"]
 |===
 |Extension    | Dependencies | Multiplicand Types | Accumulator Type
-|Zvma32a8i  ^| Zvmabase | [U]Int8 | Int32
-|Zvma32a4f  ^| Zvmabase_Zve32f | OCP MX FP4 | FP32
-|Zvma32a8f  ^| Zvmabase_Zve32f | OCP MX FP8 | FP32
-|Zvma32a16f ^| Zvmabase_Zve32f | BF16, FP16 | FP32
-|Zvma32a32f ^| Zvmabase_Zve32f | FP32 | FP32
-|Zvma64a64f ^| Zvmabase_Zve64d | FP64 | FP64
+|Zvm32a8i  ^| Zvmbase | [U]Int8 | Int32
+|Zvm32a4f  ^| Zvmbase_Zve32f | OCP MX FP4 | FP32
+|Zvm32a8f  ^| Zvmbase_Zve32f | OCP MX FP8 | FP32
+|Zvm32a16f ^| Zvmbase_Zve32f | BF16, FP16 | FP32
+|Zvm32a32f ^| Zvmbase_Zve32f | FP32 | FP32
+|Zvm64a64f ^| Zvmbase_Zve64d | FP64 | FP64
 |===
 
 === Matrix Tile State
@@ -118,8 +118,8 @@ The parameter ETE describes the tile dimensions as a function of TEW:
 `ETE = TEW < 64 ? TE : TE / 2`.
 
 Additional ISA extensions describe the tile dimensions.
-The Zvma__N__t extension indicates `TE` {ge} `__N__`, e.g.
-Zvma32t indicates TE is at least 32.
+The Zvm__N__t extension indicates `TE` {ge} `__N__`, e.g.
+Zvm32t indicates TE is at least 32.
 
 NOTE: The accumulator array dimensions (TE) may be determined dynamically with
 the `msettn` instruction to enable writing TE-agnostic software.
@@ -207,7 +207,7 @@ unsigned punning (
 
 === Matrix Type (`mtype`) CSR
 
-The Zvmabase extension adds a new unprivileged read-only CSR, `mtype`,
+The Zvmbase extension adds a new unprivileged read-only CSR, `mtype`,
 with address 0xC23.  It contains the following fields:
 
 ----
@@ -369,7 +369,7 @@ value is supplied by a zero-extended immediate, the new `vtype`.`vsew` field
 value is supplied by a zero-extended immediate, and all other `vtype` fields
 are zeroed.
 
-These instructions are included in the Zvmabase extension.
+These instructions are included in the Zvmbase extension.
 
 ==== `msettn` instruction
 
@@ -395,7 +395,7 @@ is not configured, the usual `vsetvl` can be replaced with `msetmtype` and
 `msettn`; there is no need to use a dynamic branch to select between the
 two schemes.
 
-This instruction is included in the Zvmabase extension.
+This instruction is included in the Zvmbase extension.
 
 ==== `msettm` and `msettk` instructions
 
@@ -419,7 +419,7 @@ msettk rd, rs1  // rd = tk = ((mtwiden == 0) ? 0 : min(rs1, KMAX))
 
 The `msettk` instruction sets `tk` to the lesser of `rs1` and KMAX.
 
-These instructions are included in the Zvmabase extension.
+These instructions are included in the Zvmbase extension.
 
 ==== Supported SEW, TWIDEN, and KMAX values
 
@@ -499,7 +499,7 @@ taking `pattern` mod 2, and taking the index within the pattern mod ETE.
 These instructions transfer tile subsets between the tile state and memory.
 Implementations must provide vector loads and stores with EEWs corresponding
 to all supported SEW settings (8..ELEN).
-These instructions are included in the Zvmabase extension.
+These instructions are included in the Zvmbase extension.
 
 ----
 // Load tile subset from memory
@@ -568,7 +568,7 @@ loads and stores.
 
 Tile subset operations transfer elements between a tile and a vector
 register group.
-These instructions are included in the Zvmabase extension.
+These instructions are included in the Zvmbase extension.
 
 ----
 // Move tile subset to vector register group, using TEW=SEW
@@ -604,24 +604,24 @@ vs1 specifies B vector register group
 mtd is C destination tile specifier
 
 # IEEE FP defined for:  SEW TWIDEN ALTFMT
-#                        16     2      0 FP16 (Zvma32a16f)
-#                        16     2      1 BF16 (Zvma32a16f)
-#                        32     1      0 FP32 (Zvma32a32f)
-#                        64     1      0 FP64 (Zvma64a64f)
+#                        16     2      0 FP16 (Zvm32a16f)
+#                        16     2      1 BF16 (Zvm32a16f)
+#                        32     1      0 FP32 (Zvm32a32f)
+#                        64     1      0 FP64 (Zvm64a64f)
 #
 mm.f.f mtd, vs2, vs1 # IEEE FP matmuls (FP16/BF16, FP32, FP64)
 
 # OCP FP8 defined for SEW=8 TWIDEN=4, accumulate into FP32
-mm.e5m2.e5m2 mtd, vs2, vs1 # vs2=E5M2, vs1=E5M2 (Zvma32a8f)
-mm.e5m2.e4m3 mtd, vs2, vs1 # vs2=E5M2, vs1=E4M3 (Zvma32a8f)
-mm.e4m3.e5m2 mtd, vs2, vs1 # vs2=E4M3, vs1=E5M2 (Zvma32a8f)
-mm.e4m3.e4m3 mtd, vs2, vs1 # vs2=E4M3, vs1=E4M3 (Zvma32a8f)
+mm.e5m2.e5m2 mtd, vs2, vs1 # vs2=E5M2, vs1=E5M2 (Zvm32a8f)
+mm.e5m2.e4m3 mtd, vs2, vs1 # vs2=E5M2, vs1=E4M3 (Zvm32a8f)
+mm.e4m3.e5m2 mtd, vs2, vs1 # vs2=E4M3, vs1=E5M2 (Zvm32a8f)
+mm.e4m3.e4m3 mtd, vs2, vs1 # vs2=E4M3, vs1=E4M3 (Zvm32a8f)
 
 # INT8 defined for SEW=8 TWIDEN=4, accumulate into INT32
-mm.u.u mtd, vs2, vs1   # unsigned vs2(A) unsigned vs1(B) (Zvma32a8i)
-mm.s.u mtd, vs2, vs1   # signed vs2(A) unsigned vs1(B)   (Zvma32a8i)
-mm.u.s mtd, vs2, vs1   # unsigned vs2(A) signed vs1(B)   (Zvma32a8i)
-mm.s.s mtd, vs2, vs1   # signed vs2(A) signed vs1(B)     (Zvma32a8i)
+mm.u.u mtd, vs2, vs1   # unsigned vs2(A) unsigned vs1(B) (Zvm32a8i)
+mm.s.u mtd, vs2, vs1   # signed vs2(A) unsigned vs1(B)   (Zvm32a8i)
+mm.u.s mtd, vs2, vs1   # unsigned vs2(A) signed vs1(B)   (Zvm32a8i)
+mm.s.s mtd, vs2, vs1   # signed vs2(A) signed vs1(B)     (Zvm32a8i)
 ----
 
 NOTE: There are numerous FP8 formats being developed and standardized,
@@ -655,7 +655,7 @@ accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd.
 Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
 rounding mode specified by `frm`.
 
-If the Zvma32a16f extension is implemented, the implementation must support
+If the Zvm32a16f extension is implemented, the implementation must support
 `altfmt`=1 when SEW=16 (indicating BF16).
 Selecting `altfmt`=1 for other SEW settings is reserved.
 
@@ -665,7 +665,7 @@ Support for 4-bit floating-point operands is provided through packed matrix
 multiply instructions with SEW=8.
 
 ----
-p2mm.f.f mtd, vs2, vs1   # OCP MX FP4, accumulate into FP32 (Zvma32a4f)
+p2mm.f.f mtd, vs2, vs1   # OCP MX FP4, accumulate into FP32 (Zvm32a4f)
 ----
 
 Each 8-bit input element is divided into two 4-bit fields.  The
@@ -717,7 +717,7 @@ considered part of the tail and are handled using a tail-agnostic
 policy.
 If the matrix has not been configured, i.e. `mtwiden`=0,
 an illegal-instruction exception is raised.
-This instruction is included in the Zvmabase extension.
+This instruction is included in the Zvmbase extension.
 
 ----
 # Write zeros to tile
@@ -736,9 +736,9 @@ As described below, additional `MS` context-status fields are added to reduce
 the cost of saving and restoring the tile state.
 These fields do not affect accessibility of the `mtype` CSR.
 
-==== Zvma Context Status in `mstatus`
+==== Zvm Context Status in `mstatus`
 
-A Zvma context status field, `MS`, is added to `mstatus[30:29]` and shadowed
+A Zvm context status field, `MS`, is added to `mstatus[30:29]` and shadowed
 in `sstatus[30:29]`.  It is defined analogously to the floating-point context
 status field, `FS`.
 
@@ -754,9 +754,9 @@ at any time, even when there is no change in tile state.
 If `mstatus`.MS is Dirty, `mstatus`.SD is 1;
 otherwise, `mstatus`.SD is set in accordance with existing specifications.
 
-==== Zvma Context Status in `vsstatus`
+==== Zvm Context Status in `vsstatus`
 
-When the hypervisor extension is present, a Zvma context status field, `MS`,
+When the hypervisor extension is present, a Zvm context status field, `MS`,
 is added to `vsstatus[30:29]`.
 It is defined analogously to the floating-point context status field, `FS`.
 
@@ -776,14 +776,14 @@ otherwise, `vsstatus`.SD is set in accordance with existing specifications.
 If `mstatus`.MS is Dirty, `mstatus`.SD is 1;
 otherwise, `mstatus`.SD is set in accordance with existing specifications.
 
-For the purposes of the `mstatus`.VS and `vsstatus`.VS fields, all Zvma
+For the purposes of the `mstatus`.VS and `vsstatus`.VS fields, all Zvm
 instructions (including configuration instructions) are considered to modify
 vector state.
-For the purposes of the `mstatus`.FS and `vsstatus`.FS fields, the Zvma
+For the purposes of the `mstatus`.FS and `vsstatus`.FS fields, the Zvm
 instructions that implicitly access `fcsr` are considered to modify
 floating-point state.
 
-==== Zvma Context Discard Instruction
+==== Zvm Context Discard Instruction
 
 ----
 31   26 25 24  20 19  15 14 12  11   7 6     0
@@ -796,7 +796,7 @@ the tile state is no longer useful and need not be saved.  `vtdiscard`
 raises an illegal-instruction exception if `mstatus`.MS=Off (or if V=1
 and `vsstatus`.MS=Off).  Otherwise, it changes `mstatus`.MS to Initial
 (and, if V=1, changes `vsstatus`.MS to Initial).
-This instruction is included in the Zvmabase extension.
+This instruction is included in the Zvmbase extension.
 
 `vtdiscard` raises an illegal-instruction exception if `vtype`.vill=1, but
 does not raise an exception as a result of `mtype`.`mtwiden` being zero.
