@@ -143,30 +143,44 @@ conjunction with the latter.
 
 An implementation with the Ziccid extension behaves in a manner consistent
 with the following operational model.
+This model only applies to instruction fetches to memory regions with the
+cacheability and coherence PMAs; instruction fetches to other memory regions
+proceed as though the Ziccid extension were not implemented.
+
+NOTE: Informally, instructions in incoherent and/or uncacheable memory regions
+may be incoherently cached; this cache is flushed upon execution of a FENCE.I
+instruction.
 
 Harts have two ordered operational stages: instruction fetch and execution.
-Each hart has an instruction cache and an instruction buffer of bounded
-capacity.
-Instructions are fetched in program order from the instruction cache, then
-inserted into the instruction buffer in program order.
-If an instruction is not present in the instruction cache, the instruction is
-read from memory, inserted into the cache, then inserted into the instruction
-buffer in program order.
+Each hart has an instruction buffer of bounded capacity.
+Instructions are fetched from memory in program order, then inserted into the
+instruction buffer in program order.
 
 An instruction fetch is a memory read operation that appears in the global
-memory order.
-For each instruction byte fetched from memory into the instruction cache, memory
+memory order, in program order with respect to other instruction fetches
+from the same hart.
+For each instruction byte fetched from memory, memory
 supplies the value written by the most recent store that precedes the read in
 global memory order.
 
 NOTE: This property is distinct from than the load-value axiom, in that fetches
 do not observe the local hart's stores before other harts' fetches can observe them.
 
-Instruction-cache entries may be removed at any time.
-Instruction-cache entries corresponding to arbitrary memory addresses
-may be inserted at any time.
+Instruction fetches appear in the global memory order before any explicit memory
+accesses to which they give rise.
 
-NOTE: These properties permit prefetching and speculation.
+[NOTE]
+====
+Absent the execution of a FENCE.I instruction, there is no requirement that
+younger instruction fetches appear in the global memory order later than older
+explicit memory accesses.
+For example, if a program consists of two store instructions X and Y to
+distinct addresses AX and AY, then the following global orders are valid:
+
+- fetch X, fetch Y, store AX, store AY
+- fetch X, fetch Y, store AY, store AX
+- fetch X, store AX, fetch Y, store AY
+====
 
 After some amount of time, instructions are dequeued in program order from the
 instruction buffer and executed.
@@ -182,29 +196,16 @@ NOTE: Executing a `fence w,w` instruction between two store instructions, for
 example, suffices to guarantee that the second store will not become visible
 to any instruction fetch before the first store does.
 
-Stores to memory regions with both the cacheability and coherence PMAs
-remove all harts' instruction-cache entries corresponding to the same
-physical address, as part of becoming globally visible.
-
 The FENCE.I instruction performs the following operations sequentially:
 
 - All of the hart's older explicit memory accesses become globally visible.
-- All of the hart's instruction-cache entries corresponding to memory regions that
-  do _not_ have both the cacheability and coherence PMAs are removed.
 - The instruction buffer is flushed.
 
 [NOTE]
 ====
 The FENCE.I instruction in Ziccid is specified such that software written for
 non-Ziccid machines is compatible with Ziccid machines.
-
-For cacheable and coherent memory regions, the combination of removing
-instruction-cache entries upon global store visibility and flushing the
-instruction buffer on FENCE.I suffices to implement FENCE.I's pre-Ziccid
-semantics for those regions.
-
-For non-cacheable and/or non-coherent memory regions, the combination of
-removing all instruction-cache entries corresponding to those regions and
-flushing the instruction buffer on FENCE.I suffices to implement FENCE.I's
-pre-Ziccid semantics for those regions.
+For cacheable and coherent memory regions, the combination of making older
+stores globally visible and flushing the instruction buffer on FENCE.I
+suffices to implement FENCE.I's pre-Ziccid semantics for those regions.
 ====
