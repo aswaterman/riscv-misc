@@ -195,9 +195,9 @@ XLEN-1 vill
 
 `tn` is given by the value in the `vl` register.
 
-If the Zvma32a16f extension is implemented, `altfmt` may be set to 1
-when SEW=16 (indicating BF16).  Selecting `altfmt`=1 for other SEW
-settings is reserved.
+When altfmt=1 and SEW=16, all matrix multiply instructions become reserved, except for the following, which are redefined to use the BF16 format for any operand that would otherwise have used the FP16 format:
+
+- `mm.f.f` (when the Zvma32a16f extension is implemented)
 
 NOTE: We expect most implementations will set `vill` in `vtype` when
 a reserved combination of `altfmt` and SEW is selected.
@@ -687,6 +687,8 @@ considered part of the tail and are handled using a tail-agnostic
 policy.
 If the matrix has not been configured, i.e. `vtwiden`=0 in `vtype`,
 an illegal-instruction exception is raised.
+`vtzero.t` should not raise an exception on vtypes legal for at least one
+of the supported `sf.mm` instructions.
 This instruction is included in the Zvmabase extension.
 
 ----
