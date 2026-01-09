@@ -544,7 +544,7 @@ loads and stores.
 
 Tile subset operations transfer elements between a tile and a vector
 register group.
-`vtmv.v.t` and `vtmv.t.v` supports TEW values corresponding to all
+`vtmv.v.t` and `vtmv.t.v` support TEW values corresponding to all
 supported SEW settings (8..ELEN)."
 These instructions are included in the Zvmabase extension.
 
