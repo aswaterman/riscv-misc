@@ -471,18 +471,20 @@ taking `pattern` mod 2, and taking the index within the pattern mod ETE.
 ===  Load/Store Tile Subset to Memory
 
 These instructions transfer tile subsets between the tile state and memory.
+`vlte` and `vste` support TEW values corresponding to all
+supported SEW settings (8..ELEN)."
 Implementations must provide vector loads and stores with EEWs corresponding
 to all supported SEW settings (8..ELEN).
 These instructions are included in the Zvmabase extension.
 
 ----
-// Load tile subset from memory
+// Load tile subset from memory, using TEW=EEW
 vlte8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
 vlte16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 vlte32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 vlte64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
-// Store tile subset to memory
+// Store tile subset to memory, using TEW=EEW
 vste8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
 vste16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 vste32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
@@ -542,6 +544,8 @@ loads and stores.
 
 Tile subset operations transfer elements between a tile and a vector
 register group.
+`vtmv.v.t` and `vtmv.t.v` supports TEW values corresponding to all
+supported SEW settings (8..ELEN)."
 These instructions are included in the Zvmabase extension.
 
 ----
@@ -689,6 +693,8 @@ If the matrix has not been configured, i.e. `vtwiden`=0 in `vtype`,
 an illegal-instruction exception is raised.
 `vtzero.t` should not raise an exception on vtypes legal for at least one
 of the supported `sf.mm` instructions.
+`vtzero.t` supports TEW values corresponding to all
+supported SEW settings (8..ELEN)."
 This instruction is included in the Zvmabase extension.
 
 ----
