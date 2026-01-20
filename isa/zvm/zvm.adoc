@@ -343,6 +343,7 @@ mtype = rs1
 vtype = rs2 (following vsetvl semantics)
 
 if mtype.mtwiden != 0:
+  let TWIDEN = 1 << (mtype.mtwiden - 1)
   let TEW = SEW * TWIDEN
   let ETE = TEW < 64 ? TE : TE/2 // Effective number of elements along tile edge
   let EVE = VLEN/SEW             // Effective number of elements in a vector register
