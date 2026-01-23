@@ -362,9 +362,6 @@ if mtype.mtwiden != 0:
   mtype.tk = min(mtype.tk, KMAX)
   mtype.tm = min(mtype.tm, LMUL*EVE, ETE)
 
-if vtype.vill:
-  vtype = 0
-
 if vtype.vill || mtype.mtwiden == 0:
   mtype = 0
 ----
