@@ -423,6 +423,9 @@ The `msettk` instruction sets `tk` to the lesser of `rs1` and KMAX.
 
 These instructions are included in the Zvmbase extension.
 
+NOTE: Unlike the `vsetvl` family of instructions, `msettn`, `msettm`, and
+`msettk` are not special-cased when `rd` and/or `rs1` is `x0`.
+
 ==== Supported SEW, TWIDEN, and KMAX values
 
 The inner dimension specified by `tk` is used to support fused
