@@ -548,7 +548,7 @@ patterns, the elements of the row or column are stored in increasing
 index order in memory.
 
 For these instructions, the body elements are those with indices in the range
-[`vstart`, `min(vl, ETE) - 1`], and the tail elements are those with indices
+`[vstart, min(vl, ETE) - 1]`, and the tail elements are those with indices
 {ge} `min(vl, ETE)`.
 
 NOTE: Since `vl`=`tn` holds the number of columns in the accumulator, i.e. the
@@ -603,11 +603,11 @@ For these instructions, the body elements are those with indices in the range
 These instructions all have the form C += A^T * B, where C is held in
 a tile and A and B are supplied by vector register groups.
 
-Unsupported `vtype` settings are handled the same as for vector instructions.
+Unsupported `vtype` or `mtype` settings are reserved.
 An illegal-instruction exception is raised if `vstart` is nonzero.
 
 ----
-vtype holds SEW and TWIDEN
+vtype holds SEW; mtype holds TWIDEN
 vs2 specifies A vector register group
 vs1 specifies B vector register group
 mtd is C destination tile specifier
