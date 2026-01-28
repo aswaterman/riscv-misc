@@ -333,10 +333,12 @@ The `vs1`, `vs2`, and `vd` operands all have EEW=SEW.
 vfbdota.vv vd, vs2, vs1, ci, vm
 ----
 
-The intermediate FP32 products may either be kept in full precision or may be rounded
-to FP32 according to the dynamic rounding mode.
-The sum of these dot products and the accumulator must be as though computed by the
-`vfredusum.vs` instruction with SEW=32.
+The FP32 products are first computed to full precision, setting the invalid operation
+exception flag as appropriate.
+The products are then optionally rounded to FP32 according to the dynamic rounding mode,
+setting the inexact, overflow, and underflow exception flags as appropriate.
+The sum of these products and the accumulator are then computed as though by the
+`vfredusum.vs` instruction with SEW=32, including the setting of exception flags.
 
 NOTE: This formulation allows significant implementation flexibility while being sufficiently
 precise to implement SGEMM.
