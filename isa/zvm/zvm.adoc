@@ -510,16 +510,16 @@ These instructions are included in the Zvmbase extension.
 
 ----
 // Load tile subset from memory, using TEW=EEW
-vlte8.t  rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte16.t rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte32.t rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte64.t rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vlte8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vlte16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vlte32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vlte64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
 // Store tile subset to memory, using TEW=EEW
-vste8.t  rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste16.t rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste32.t rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste64.t rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vste8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vste16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vste32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vste64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
 ----
 
