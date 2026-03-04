@@ -226,7 +226,7 @@ When `altfmt`=1 and SEW=16, all matrix multiply instructions become reserved,
 except for the following, which are redefined to use the BF16 format for any
 operand that would otherwise have used the FP16 format:
 
-- `mm.f.f` (when the Zvma32a16f extension is implemented)
+- `vfmm.tvv` (when the Zvma32a16f extension is implemented)
 
 If `mtwiden`=0, the matrix unit is not configured.
 
@@ -607,30 +607,44 @@ Unsupported `vtype` or `mtype` settings are reserved.
 An illegal-instruction exception is raised if `vstart` is nonzero.
 
 ----
-vtype holds SEW; mtype holds TWIDEN
-vs2 specifies A vector register group
-vs1 specifies B vector register group
-mtd is C destination tile specifier
+# vtype holds SEW and altfmt; mtype holds TWIDEN
+# vs2 specifies A vector register group
+# vs1 specifies B vector register group
+# mtd is C destination tile specifier
 
-# IEEE FP defined for:  SEW TWIDEN ALTFMT
-#                        16     2      0 FP16 (Zvm32a16f)
-#                        16     2      1 BF16 (Zvm32a16f)
-#                        32     1      0 FP32 (Zvm32a32f)
-#                        64     1      0 FP64 (Zvm64a64f)
-#
-mm.f.f mtd, vs2, vs1 # IEEE FP matmuls (FP16/BF16, FP32, FP64)
+# datatype of vs2 is supplied by opcode, SEW
+# datatype of vs1 is supplied by altfmt, SEW
+# datatype of mtd is supplied by opcode, SEW, TWIDEN
 
-# OCP FP8 defined for SEW=8 TWIDEN=4, accumulate into FP32
-mm.e5m2.e5m2 mtd, vs2, vs1 # vs2=E5M2, vs1=E5M2 (Zvm32a8f)
-mm.e5m2.e4m3 mtd, vs2, vs1 # vs2=E5M2, vs1=E4M3 (Zvm32a8f)
-mm.e4m3.e5m2 mtd, vs2, vs1 # vs2=E4M3, vs1=E5M2 (Zvm32a8f)
-mm.e4m3.e4m3 mtd, vs2, vs1 # vs2=E4M3, vs1=E4M3 (Zvm32a8f)
 
-# INT8 defined for SEW=8 TWIDEN=4, accumulate into INT32
-mm.u.u mtd, vs2, vs1   # unsigned vs2(A) unsigned vs1(B) (Zvm32a8i)
-mm.s.u mtd, vs2, vs1   # signed vs2(A) unsigned vs1(B)   (Zvm32a8i)
-mm.u.s mtd, vs2, vs1   # unsigned vs2(A) signed vs1(B)   (Zvm32a8i)
-mm.s.s mtd, vs2, vs1   # signed vs2(A) signed vs1(B)     (Zvm32a8i)
+# FP Matmuls (OCP, BF16, IEEE)
+
+# SEW  TWIDEN  altfmt    vs2   vs1   mtd
+#   8      4       0    E4M3  E4M3  FP32 (Zvm32a8f)
+#   8      4       1    E4M3  E5M2  FP32 (Zvm32a8f)
+#  16      2       0    FP16  FP16  FP32 (Zvm32a16f)
+#  32      1       0    FP32  FP32  FP32 (Zvm32a32f)
+#  64      1       0    FP64  FP64  FP64 (Zvm64a64f)
+vfmm.tvv     mtd, vs2, vs1
+
+# SEW  TWIDEN  altfmt    vs2   vs1   mtd
+#   8      4       0    E5M2  E4M3  FP32 (Zvm32a8f)
+#   8      4       1    E5M2  E5M2  FP32 (Zvm32a8f)
+#  16      2       1    BF16  BF16  FP32 (Zvm32a16f)
+vfmm.alt.tvv mtd, vs2, vs1
+
+
+# Integer Matmuls
+
+# SEW  TWIDEN  altfmt    vs2   vs1   mtd
+#   8      4       0   uint8 uint8 int32 (Zvm32a8i)
+#   8      4       1   uint8  int8 int32 (Zvm32a8i)
+vmmu.tvv mtd, vs2, vs1
+
+# SEW  TWIDEN  altfmt   vs2   vs1    mtd
+#   8      4       0   int8 uint8  int32 (Zvm32a8i)
+#   8      4       1   int8  int8  int32 (Zvm32a8i)
+vmms.tvv mtd, vs2, vs1
 ----
 
 NOTE: There are numerous FP8 formats being developed and standardized,
@@ -671,14 +685,14 @@ Selecting `altfmt`=1 for other SEW settings is reserved.
 ==== FP4 Matrix Arithmetic
 
 Support for 4-bit floating-point operands is provided through packed matrix
-multiply instructions with SEW=8.
+multiply instructions with SEW=8 and TWIDEN=4.
 
 ----
-p2mm.f.f mtd, vs2, vs1   # OCP MX FP4, accumulate into FP32 (Zvm32a4f)
+vfp2mm.tvv mtd, vs2, vs1   # OCP MX FP4, accumulate into FP32 (Zvm32a4f)
 ----
 
 Each 8-bit input element is divided into two 4-bit fields.  The
-`p2mm.f.f` instruction treats `tm`, `tn`, and `tk` values as defining the
+`vfp2mm.tvv` instruction treats `tm`, `tn`, and `tk` values as defining the
 same 8-bit operand fields and 32-bit accumulators as for a regular
 SEW=8 matrix multiply instruction, except that each 8-bit multiply
 between two elements is replaced with a two-element dot product of two
@@ -700,21 +714,13 @@ nonzero, the instruction is reserved.
 ----
 31   26 25 24  20 19  15 14 12  1110 9 8 7 6     0
  funct6 vm   vs2    vs1  funct3     rd      opcode
- 111100  1   vs2    vs1    001   t t t 0 0  1110111 // mm.f.f
+ 111100  1   vs2    vs1    001   t t t 0 0  1110111 // vfmm.tvv
+ 111100  1   vs2    vs1    001   t t t 0 1  1110111 // vfmm.alt.tvv
 
- 111100  1   vs2    vs1    001   t t t 0 1  1110111 // p2mm.f.f
+ 111100  1   vs2    vs1    001   t t t 1 0  1110111 // vfp2mm.tvv
 
- 11111a  1   vs2    vs1    001   t t 0 0 b  1110111 // mm.<a>.<b>
-
-Encoding of a/b fields
-0 e5m2
-1 e4m3
-
- 11110a  1   vs2    vs1    000   t t 0 0 b  1110111 // mm.<a>.<b>
-
-Encoding of a/b fields
-0 unsigned
-1 signed
+ 111100  1   vs2    vs1    000   t t t 0 0  1110111 // vmmu.tvv
+ 111100  1   vs2    vs1    000   t t t 0 1  1110111 // vmms.tvv
 ----
 
 === Matrix Tile-Zero Instruction
