@@ -1,5 +1,5 @@
-= Zvt Family of Attached Matrix Extensions
-Warning! This document describes an Attached Matrix Extensions proposal from SiFive. It is not an RVIA standard.
+= Zvt Family of Vector Matrix Extensions
+Warning! This document describes an Vector Matrix Extensions proposal from SiFive. It is not an RVIA standard.
 :doctype: book
 :revnumber: v0.3
 :revdate: 2026/03/03
