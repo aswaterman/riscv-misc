@@ -1,4 +1,4 @@
-= Zvm Family of Attached Matrix Extensions
+= Zvt Family of Attached Matrix Extensions
 Warning! This document describes an Attached Matrix Extensions proposal from SiFive. It is not an RVIA standard.
 :doctype: book
 :revnumber: v0.3
@@ -15,7 +15,7 @@ Warning! This document describes an Attached Matrix Extensions proposal from SiF
 
 == Overview
 
-The Zvm family of extensions supports high-throughput matrix-multiplication
+The Zvt family of extensions supports high-throughput matrix-multiplication
 computation.
 These extensions add new architectural state to each hart in the form of
 square matrix tiles.
@@ -35,7 +35,7 @@ the number of rows is given by K.
 The inner dimension K can be a maximum (KMAX) of 1, 2, or 4, depending on the
 data type of A and B.
 
-In addition, the Zvm extensions provide instructions to move rows and
+In addition, the Zvt extensions provide instructions to move rows and
 columns of the matrix arrays, either to and from the vector registers or to
 and from memory.
 
@@ -44,16 +44,16 @@ configuration, move, load, store, and context-manipulation instructions.
 These instructions support tile EEW (TEW) values corresponding to all
 supported SEW settings (8..ELEN).
 
-The Zvm extensions build upon the vector extensions.
+The Zvt extensions build upon the vector extensions.
 The vector registers serve as a data source for matrix operands, and the
 existing vector instructions are used for pre- and post-processing of matrices.
 Hence, the Zvtbase extension requires the Zve32x extension.
 
-The Zvm extensions are compatible with the RV32E, RV32I, RV64E, and RV64I base
+The Zvt extensions are compatible with the RV32E, RV32I, RV64E, and RV64I base
 ISAs, but it is expected that RV64I will be by far the most common base-ISA
 choice.
 
-The following table lists the computational extensions in the Zvm family.
+The following table lists the computational extensions in the Zvt family.
 
 [cols="1,1,3,3", options="header"]
 |===
@@ -116,8 +116,8 @@ The parameter ETE describes the tile dimensions as a function of TEW:
 `ETE = TEW < 64 ? TE : TE / 2`.
 
 Additional ISA extensions describe the tile dimensions.
-The Zvm__N__t extension indicates `TE` {ge} `__N__`, e.g.
-Zvm32t indicates TE is at least 32.
+The Zvt__N__t extension indicates `TE` {ge} `__N__`, e.g.
+Zvt32t indicates TE is at least 32.
 
 NOTE: The accumulator array dimensions (TE) may be determined dynamically with
 the `msettn` instruction to enable writing TE-agnostic software.
@@ -731,9 +731,9 @@ As described below, additional `MS` context-status fields are added to reduce
 the cost of saving and restoring the tile state.
 These fields do not affect accessibility of the `mtype` CSR.
 
-==== Zvm Context Status in `mstatus`
+==== Zvt Context Status in `mstatus`
 
-A Zvm context status field, `MS`, is added to `mstatus[30:29]` and shadowed
+A Zvt context status field, `MS`, is added to `mstatus[30:29]` and shadowed
 in `sstatus[30:29]`.  It is defined analogously to the floating-point context
 status field, `FS`.
 
@@ -749,9 +749,9 @@ at any time, even when there is no change in tile state.
 If `mstatus`.MS is Dirty, `mstatus`.SD is 1;
 otherwise, `mstatus`.SD is set in accordance with existing specifications.
 
-==== Zvm Context Status in `vsstatus`
+==== Zvt Context Status in `vsstatus`
 
-When the hypervisor extension is present, a Zvm context status field, `MS`,
+When the hypervisor extension is present, a Zvt context status field, `MS`,
 is added to `vsstatus[30:29]`.
 It is defined analogously to the floating-point context status field, `FS`.
 
@@ -771,14 +771,14 @@ otherwise, `vsstatus`.SD is set in accordance with existing specifications.
 If `mstatus`.MS is Dirty, `mstatus`.SD is 1;
 otherwise, `mstatus`.SD is set in accordance with existing specifications.
 
-For the purposes of the `mstatus`.VS and `vsstatus`.VS fields, all Zvm
+For the purposes of the `mstatus`.VS and `vsstatus`.VS fields, all Zvt
 instructions (including configuration instructions) are considered to modify
 vector state.
-For the purposes of the `mstatus`.FS and `vsstatus`.FS fields, the Zvm
+For the purposes of the `mstatus`.FS and `vsstatus`.FS fields, the Zvt
 instructions that implicitly access `fcsr` are considered to modify
 floating-point state.
 
-==== Zvm Context Discard Instruction
+==== Zvt Context Discard Instruction
 
 ----
 31   26 25 24  20 19  15 14 12  11   7 6     0
