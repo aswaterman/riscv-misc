@@ -496,7 +496,7 @@ taking `pattern` mod 2, and taking the index within the pattern mod ETE.
 ===  Load/Store Tile Subset to Memory
 
 These instructions transfer tile subsets between the tile state and memory.
-`vlte` and `vste` support TEW values corresponding to all
+`vtle` and `vtse` support TEW values corresponding to all
 supported SEW settings (8..ELEN).
 Implementations must provide vector loads and stores with EEWs corresponding
 to all supported SEW settings (8..ELEN).
@@ -504,16 +504,16 @@ These instructions are included in the Zvtbase extension.
 
 ----
 // Load tile subset from memory, using TEW=EEW
-vlte8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
 // Store tile subset to memory, using TEW=EEW
-vste8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
 ----
 
