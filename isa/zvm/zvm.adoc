@@ -619,13 +619,13 @@ An illegal-instruction exception is raised if `vstart` is nonzero.
 #  16      2       0    FP16  FP16  FP32 (Zvtfp16fmm)
 #  32      1       0    FP32  FP32  FP32 (Zvtfmm)
 #  64      1       0    FP64  FP64  FP64 (Zvm64a64f)
-vfmm.tvv     mtd, vs2, vs1
+vtfmm.tvv     mtd, vs2, vs1
 
 # SEW  TWIDEN  altfmt    vs2   vs1   mtd
 #   8      4       0    E5M2  E4M3  FP32 (Zvtofp8fmm)
 #   8      4       1    E5M2  E5M2  FP32 (Zvtofp8fmm)
 #  16      2       1    BF16  BF16  FP32 (Zvtbf16fmm)
-vfmm.alt.tvv mtd, vs2, vs1
+vtfmm.alt.tvv mtd, vs2, vs1
 
 
 # Integer Matmuls
@@ -633,12 +633,12 @@ vfmm.alt.tvv mtd, vs2, vs1
 # SEW  TWIDEN  altfmt    vs2   vs1   mtd
 #   8      4       0   uint8 uint8 int32 (Zvti8i32mm)
 #   8      4       1   uint8  int8 int32 (Zvti8i32mm)
-vmmu.tvv mtd, vs2, vs1
+vtmmu.tvv mtd, vs2, vs1
 
 # SEW  TWIDEN  altfmt   vs2   vs1    mtd
 #   8      4       0   int8 uint8  int32 (Zvti8i32mm)
 #   8      4       1   int8  int8  int32 (Zvti8i32mm)
-vmms.tvv mtd, vs2, vs1
+vtmms.tvv mtd, vs2, vs1
 ----
 
 NOTE: There are numerous FP8 formats being developed and standardized,
@@ -709,13 +709,13 @@ nonzero, the instruction is reserved.
 ----
 31   26 25 24  20 19  15 14 12  1110 9 8 7 6     0
  funct6 vm   vs2    vs1  funct3     rd      opcode
- 111100  1   vs2    vs1    001   t t t 0 0  1110111 // vfmm.tvv
- 111100  1   vs2    vs1    001   t t t 0 1  1110111 // vfmm.alt.tvv
+ 111100  1   vs2    vs1    001   t t t 0 0  1110111 // vtfmm.tvv
+ 111100  1   vs2    vs1    001   t t t 0 1  1110111 // vtfmm.alt.tvv
 
  111100  1   vs2    vs1    001   t t t 1 0  1110111 // vfp2mm.tvv
 
- 111100  1   vs2    vs1    000   t t t 0 0  1110111 // vmmu.tvv
- 111100  1   vs2    vs1    000   t t t 0 1  1110111 // vmms.tvv
+ 111100  1   vs2    vs1    000   t t t 0 0  1110111 // vtmmu.tvv
+ 111100  1   vs2    vs1    000   t t t 0 1  1110111 // vtmms.tvv
 ----
 
 === Matrix Tile-Zero Instruction
