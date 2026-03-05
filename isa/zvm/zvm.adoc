@@ -59,7 +59,6 @@ The following table lists the computational extensions in the Zvm family.
 |===
 |Extension   | Dependencies | Multiplicand Types | Accumulator Type
 |Zvti8i32mm ^| Zvtbase | [U]Int8 | Int32
-|Zvm32a4f   ^| Zvtbase_Zve32f | OCP MX FP4 | FP32
 |Zvtofp8fmm ^| Zvtbase_Zve32f | OCP MX FP8 | FP32
 |Zvtfp16fmm ^| Zvtbase_Zve32f | BF16, FP16 | FP32
 |Zvtfmm     ^| Zvtbase_Zve32f | FP32 | FP32
@@ -677,22 +676,6 @@ selecting `altfmt`=1 when SEW=16.
 Similarly, if the Zvti8i32mm or Zvtofp8fmm extension is implemented, the
 implementation must support selecting `altfmt`=1 when SEW=8.
 
-==== FP4 Matrix Arithmetic
-
-Support for 4-bit floating-point operands is provided through packed matrix
-multiply instructions with SEW=8 and TWIDEN=4.
-
-----
-vfp2mm.tvv mtd, vs2, vs1   # OCP MX FP4, accumulate into FP32 (Zvm32a4f)
-----
-
-Each 8-bit input element is divided into two 4-bit fields.  The
-`vfp2mm.tvv` instruction treats `tm`, `tn`, and `tk` values as defining the
-same 8-bit operand fields and 32-bit accumulators as for a regular
-SEW=8 matrix multiply instruction, except that each 8-bit multiply
-between two elements is replaced with a two-element dot product of two
-2x4-bit vectors.
-
 ==== Matrix Arithmetic Instruction Encoding
 
 The matrix arithmetic instructions are encoded in the second vector major opcode, OP-VE.
@@ -711,8 +694,6 @@ nonzero, the instruction is reserved.
  funct6 vm   vs2    vs1  funct3     rd      opcode
  111100  1   vs2    vs1    001   t t t 0 0  1110111 // vtfmm.tvv
  111100  1   vs2    vs1    001   t t t 0 1  1110111 // vtfmm.alt.tvv
-
- 111100  1   vs2    vs1    001   t t t 1 0  1110111 // vfp2mm.tvv
 
  111100  1   vs2    vs1    000   t t t 0 0  1110111 // vtmmu.tvv
  111100  1   vs2    vs1    000   t t t 0 1  1110111 // vtmms.tvv
