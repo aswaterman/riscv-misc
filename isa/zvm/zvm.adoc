@@ -659,15 +659,21 @@ updated by the results of floating-point matrix operations.  The
 inexact, underflow, and divide-by-zero flags are not updated,
 nor is the fixed-point saturation flag.
 
+For SEW {le} 16, floating-point products are bulk-normalized, rounded to odd,
+accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd.
+Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
+rounding mode specified by `frm`.
+
 For SEW {ge} 32, floating-point products are computed in IEEE 754 arithmetic
 then rounded to a TEW-bit value, using the rounding mode specified by `frm`.
 They are then added to the accumulator in IEEE 754 arithmetic, using the same
 rounding mode.
 
-For SEW {le} 16, floating-point products are bulk-normalized, rounded to odd,
-accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd.
-Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
-rounding mode specified by `frm`.
+NOTE: Rounding the product before accumulating facilitates datapath sharing
+with the SEW {le} 16 operations.
+It also reduces power, area, and back-to-back accumulation latency as compared
+to a fused multiply-adder, even if the FMA is cascaded to optimize this case.
+Future extensions can define fused multiply-accumulate instructions.
 
 If the Zvtbf16fmm extension is implemented, the implementation must support
 selecting `altfmt`=1 when SEW=16.
