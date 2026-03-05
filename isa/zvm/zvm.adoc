@@ -222,12 +222,6 @@ XLEN-1:24 reserved
 
 `tk` can hold values from 0-4, inclusive.
 
-When `altfmt`=1 and SEW=16, all matrix multiply instructions become reserved,
-except for the following, which are redefined to use the BF16 format for any
-operand that would otherwise have used the FP16 format:
-
-- `vfmm.tvv` (when the Zvma32a16f extension is implemented)
-
 If `mtwiden`=0, the matrix unit is not configured.
 
 === Matrix-Multiply Operations
@@ -679,8 +673,9 @@ Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
 rounding mode specified by `frm`.
 
 If the Zvtbf16fmm extension is implemented, the implementation must support
-`altfmt`=1 when SEW=16 (indicating BF16).
-Selecting `altfmt`=1 for other SEW settings is reserved.
+selecting `altfmt`=1 when SEW=16.
+Similarly, if the Zvti8i32mm or Zvtofp8fmm extension is implemented, the
+implementation must support selecting `altfmt`=1 when SEW=8.
 
 ==== FP4 Matrix Arithmetic
 
