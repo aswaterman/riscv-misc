@@ -720,21 +720,21 @@ nonzero, the instruction is reserved.
 
 === Matrix Tile-Zero Instruction
 
-The `vtzero.t` instruction writes 0 to each element of the `tm` by `tn`
+The `vtzero` instruction writes 0 to each element of the `tm` by `tn`
 submatrix of the destination tile.
 Any tile elements outside the range [0, tm-1] x [0, tn-1] are
 considered part of the tail and are handled using a tail-agnostic
 policy.
-`vtzero.t` supports TEW values corresponding to all
+`vtzero` supports TEW values corresponding to all
 supported SEW settings (8..ELEN).
 This instruction is included in the Zvtbase extension.
 
 ----
 # Write zeros to tile
-vtzero.t mtd
+vtzero mtd
 
 31   26 25 24  20 19  15 14 12  1110 9 8 7 6     0
- 010000  1  11110  00000   110   t t t t 0  1010111 // vtzero.t
+ 010000  1  11110  00000   110   t t t t 0  1010111 // vtzero
 ----
 
 === Context Status
