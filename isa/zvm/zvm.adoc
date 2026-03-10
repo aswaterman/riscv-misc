@@ -421,10 +421,10 @@ NOTE: Unlike the `vsetvl` family of instructions, `msettn`, `msettm`, and
 
 ==== Supported SEW, TWIDEN, and KMAX values
 
-The inner dimension specified by `tk` is used to support fused
+The inner dimension specified by `tk` is used to support
 dot-product operations on narrower datatypes to increase efficiency.
 The ISA fixes maximum K values (KMAX) of matrix-multiply instructions
-according to SEW and TWIDEN to simplify ISA specification of fused
+according to SEW and TWIDEN to simplify ISA specification of these
 arithmetic operators.
 
 NOTE: Unlike other matrix accelerator architectures that support fusion of
@@ -435,23 +435,23 @@ approach allows software to use standard matrix formats.
 TEW=8
 
 SEW  TWIDEN  KMAX
- 8    1       4  (fused 4-element dot product)
+ 8    1       4  (4-element dot product)
 ----
 
 ----
 TEW=16
 
 SEW  TWIDEN  KMAX
- 8    2       4  (fused 4-element dot product)
-16    1       2  (fused 2-element dot product)
+ 8    2       4  (4-element dot product)
+16    1       2  (2-element dot product)
 ----
 
 ----
 TEW=32
 
 SEW  TWIDEN  KMAX
- 8    4       4  (fused 4-element dot product)
-16    2       2  (fused 2-element dot product)
+ 8    4       4  (4-element dot product)
+16    2       2  (2-element dot product)
 32    1       1
 ----
 
@@ -459,7 +459,7 @@ SEW  TWIDEN  KMAX
 TEW=64
 
 SEW  TWIDEN  KMAX
-16    4       2  (fused 2-element dot product)
+16    4       2  (2-element dot product)
 32    2       1
 64    1       1
 ----
