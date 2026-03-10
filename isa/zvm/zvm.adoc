@@ -561,8 +561,17 @@ The matrix extension follows the precise exception model of the vector
 extension, allowing memory to be updated past the element indicated by
 `vstart` on a trap.
 
-Misaligned element addresses are handled the same as for unit-stride vector
-loads and stores.
+Misaligned element addresses raise either a load/store address-misaligned
+exception or a load/store access-fault exception.
+
+NOTE: The vector extensions allow element addresses to be misaligned to
+facilitate automatic vectorization of existing scalar code that might use
+misaligned addresses.
+In contrast, software written for the Zvt extensions is new software, for
+which the standard ABIs require natural alignment.
+Disallowing misaligned accesses is therefore unlikely to cause
+incompatibilities, and doing so has the benefit of simplifying implementations
+and detecting programming errors.
 
 === Move Tile Subset between Tile State and Vector Registers
 
