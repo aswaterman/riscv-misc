@@ -41,8 +41,26 @@ and from memory.
 
 The Zvtbase extension provides the new architectural state and the new
 configuration, move, load, store, and context-manipulation instructions.
-These instructions support tile EEW (TEW) values corresponding to all
-supported SEW settings (8..ELEN).
+In the base, the move, load, and store instructions support a tile EEW (TEW)
+of 32; other TEWs are reserved for these instructions.
+
+NOTE: Not mandating support for all TEWs reduces hardware complexity.
+Mandating all Zvm implementations support TEW=32 allows the context-switch
+routines to be the same for all implementations.
+TEW=32 was chosen because it is currently the most popular accumulator width,
+and other aspects of the Zvt extensions are optimized accordingly.
+
+Moves, loads, and stores for other TEW values are provided by additional
+extensions.
+
+[cols="1,1,3", options="header"]
+|===
+|Extension   | Dependencies   | Description
+|Zvtbase    ^| Zve32x         | Tile state; TEW=32 moves, loads, and stores
+|Zvt8e      ^| Zvtbase        | TEW=8 moves, loads, and stores
+|Zvt16e     ^| Zvtbase        | TEW=16 moves, loads, and stores
+|Zvt64e     ^| Zvtbase_Zve64x | TEW=64 moves, loads, and stores
+|===
 
 The Zvt extensions build upon the vector extensions.
 The vector registers serve as a data source for matrix operands, and the
@@ -58,12 +76,18 @@ The following table lists the computational extensions in the Zvt family.
 [cols="1,1,3,3", options="header"]
 |===
 |Extension   | Dependencies | Multiplicand Types | Accumulator Type
-|Zvti8i32mm ^| Zvtbase | [U]Int8 | Int32
-|Zvtofp8fmm ^| Zvtbase_Zve32f | OCP MX FP8 | FP32
-|Zvtfp16fmm ^| Zvtbase_Zve32f | BF16, FP16 | FP32
-|Zvtfmm     ^| Zvtbase_Zve32f | FP32 | FP32
-|Zvtdmm     ^| Zvtbase_Zve64d | FP64 | FP64
+|Zvti8i32mm ^| Zvtbase_Zvt8e | [U]Int8 | Int32
+|Zvtofp8fmm ^| Zvtbase_Zvt8e | OCP MX FP8 | FP32
+|Zvtfp16fmm ^| Zvtbase_Zvt16e | BF16, FP16 | FP32
+|Zvtfmm     ^| Zvtbase | FP32 | FP32
+|Zvtdmm     ^| Zvtbase_Zvt64e | FP64 | FP64
 |===
+
+Each computational extension requires the moves, loads, and stores of both the
+multiplicand width and accumulator width be supported.
+
+NOTE: Requiring transfers of multiplicand width be supported facilitates
+efficient transpose of matrices of those datatypes using the tile storage.
 
 === Matrix Tile State
 
