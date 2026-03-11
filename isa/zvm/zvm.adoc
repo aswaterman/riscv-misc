@@ -45,7 +45,7 @@ In the base, the move, load, and store instructions support a tile EEW (TEW)
 of 32; other TEWs are reserved for these instructions.
 
 NOTE: Not mandating support for all TEWs reduces hardware complexity.
-Mandating all Zvm implementations support TEW=32 allows the context-switch
+Mandating all Zvt implementations support TEW=32 allows the context-switch
 routines to be the same for all implementations.
 TEW=32 was chosen because it is currently the most popular accumulator width,
 and other aspects of the Zvt extensions are optimized accordingly.
