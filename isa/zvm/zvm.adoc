@@ -695,8 +695,10 @@ updated by the results of floating-point matrix operations.  The
 inexact, underflow, and divide-by-zero flags are not updated,
 nor is the fixed-point saturation flag.
 
-For SEW {le} 16, floating-point products are bulk-normalized, rounded to odd,
-accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd.
+For SEW {le} 16, floating-point products are bulk-normalized
+accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd,
+according to the
+https://github.com/riscv/riscv-isa-manual/blob/03c4abb8b4b276938c3fd96e3eb53c5840e3c24b/src/zvdota.adoc#risc-v-bulk-normalization-algorithm[RVBNA Algoirhtm].
 Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
 rounding mode specified by `frm`.
 
