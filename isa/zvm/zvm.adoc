@@ -1,8 +1,8 @@
-= Zvm Family of Attached Matrix Extensions
-Warning! This document describes an Attached Matrix Extensions proposal from SiFive. It is not an RVIA standard.
+= Zvt Family of Vector Matrix Extensions
+Warning! This document describes an Vector Matrix Extensions proposal from SiFive. It is not an RVIA standard.
 :doctype: book
-:revnumber: v0.2
-:revdate: 2025/11/30
+:revnumber: v0.3
+:revdate: 2026/03/03
 :toc: left
 :toclevels: 5
 :sectnums:
@@ -15,7 +15,7 @@ Warning! This document describes an Attached Matrix Extensions proposal from SiF
 
 == Overview
 
-The Zvm family of extensions supports high-throughput matrix-multiplication
+The Zvt family of extensions supports high-throughput matrix-multiplication
 computation.
 These extensions add new architectural state to each hart in the form of
 square matrix tiles.
@@ -35,36 +35,60 @@ the number of rows is given by K.
 The inner dimension K can be a maximum (KMAX) of 1, 2, or 4, depending on the
 data type of A and B.
 
-In addition, the Zvm extensions provide instructions to move rows and
+In addition, the Zvt extensions provide instructions to move rows and
 columns of the matrix arrays, either to and from the vector registers or to
 and from memory.
 
-The Zvmbase extension provides the new architectural state and the new
+The Zvtbase extension provides the new architectural state and the new
 configuration, move, load, store, and context-manipulation instructions.
-These instructions support tile EEW (TEW) values corresponding to all
-supported SEW settings (8..ELEN).
+In the base, the move, load, and store instructions support a tile EEW (TEW)
+of 32; other TEWs are reserved for these instructions.
 
-The Zvm extensions build upon the vector extensions.
+NOTE: Not mandating support for all TEWs reduces hardware complexity.
+Mandating all Zvt implementations support TEW=32 allows the context-switch
+routines to be the same for all implementations.
+TEW=32 was chosen because it is currently the most popular accumulator width,
+and other aspects of the Zvt extensions are optimized accordingly.
+
+Moves, loads, and stores for other TEW values are provided by additional
+extensions.
+
+[cols="1,1,3", options="header"]
+|===
+|Extension   | Dependencies   | Description
+|Zvtbase    ^| Zve32x         | Tile state; TEW=32 moves, loads, and stores
+|Zvt8e      ^| Zvtbase        | TEW=8 moves, loads, and stores
+|Zvt16e     ^| Zvtbase        | TEW=16 moves, loads, and stores
+|Zvt64e     ^| Zvtbase_Zve64x | TEW=64 moves, loads, and stores
+|===
+
+The Zvt extensions build upon the vector extensions.
 The vector registers serve as a data source for matrix operands, and the
 existing vector instructions are used for pre- and post-processing of matrices.
-Hence, the Zvmbase extension requires the Zve32x extension.
+Hence, the Zvtbase extension requires the Zve32x extension.
 
-The Zvm extensions are compatible with the RV32E, RV32I, RV64E, and RV64I base
+The Zvt extensions are compatible with the RV32E, RV32I, RV64E, and RV64I base
 ISAs, but it is expected that RV64I will be by far the most common base-ISA
 choice.
 
-The following table lists the computational extensions in the Zvm family.
+The following table lists the computational extensions in the Zvt family.
 
 [cols="1,1,3,3", options="header"]
 |===
-|Extension    | Dependencies | Multiplicand Types | Accumulator Type
-|Zvm32a8i  ^| Zvmbase | [U]Int8 | Int32
-|Zvm32a4f  ^| Zvmbase_Zve32f | OCP MX FP4 | FP32
-|Zvm32a8f  ^| Zvmbase_Zve32f | OCP MX FP8 | FP32
-|Zvm32a16f ^| Zvmbase_Zve32f | BF16, FP16 | FP32
-|Zvm32a32f ^| Zvmbase_Zve32f | FP32 | FP32
-|Zvm64a64f ^| Zvmbase_Zve64d | FP64 | FP64
+|Extension   | Dependencies | Multiplicand Types | Accumulator Type
+|Zvti8i32mm ^| Zvtbase_Zvt8e | [U]Int8 | Int32
+|Zvtofp8fmm ^| Zvtbase_Zvt8e | OCP MX FP8 | FP32
+|Zvtfp16fmm ^| Zvtbase_Zvt16e | FP16 | FP32
+|Zvtbf16fmm ^| Zvtbase_Zvt16e | BF16 | FP32
+|Zvtfmm     ^| Zvtbase | FP32 | FP32
+|Zvtdmm     ^| Zvtbase_Zvt64e | FP64 | FP64
 |===
+
+Each computational extension requires the moves, loads, and stores of both the
+multiplicand width and accumulator width be supported.
+
+NOTE: Requiring transfers of multiplicand width be supported facilitates
+efficient transpose of matrices of those datatypes using the tile storage.
 
 === Matrix Tile State
 
@@ -118,8 +142,8 @@ The parameter ETE describes the tile dimensions as a function of TEW:
 `ETE = TEW < 64 ? TE : TE / 2`.
 
 Additional ISA extensions describe the tile dimensions.
-The Zvm__N__t extension indicates `TE` {ge} `__N__`, e.g.
-Zvm32t indicates TE is at least 32.
+The Zvt__N__t extension indicates `TE` {ge} `__N__`, e.g.
+Zvt32t indicates TE is at least 32.
 
 NOTE: The accumulator array dimensions (TE) may be determined dynamically with
 the `msettn` instruction to enable writing TE-agnostic software.
@@ -205,7 +229,7 @@ unsigned punning (
 
 === Matrix Type (`mtype`) CSR
 
-The Zvmbase extension adds a new unprivileged read-only CSR, `mtype`,
+The Zvtbase extension adds a new unprivileged read-only CSR, `mtype`,
 with address 0xC23.  It contains the following fields:
 
 ----
@@ -221,12 +245,6 @@ XLEN-1:24 reserved
 `tm` can hold values from 0-TE, inclusive.
 
 `tk` can hold values from 0-4, inclusive.
-
-When `altfmt`=1 and SEW=16, all matrix multiply instructions become reserved,
-except for the following, which are redefined to use the BF16 format for any
-operand that would otherwise have used the FP16 format:
-
-- `mm.f.f` (when the Zvma32a16f extension is implemented)
 
 If `mtwiden`=0, the matrix unit is not configured.
 
@@ -371,7 +389,7 @@ value is supplied by a zero-extended immediate, the new `vtype`.`vsew` field
 value is supplied by a zero-extended immediate, and all other `vtype` fields
 are zeroed.
 
-These instructions are included in the Zvmbase extension.
+These instructions are included in the Zvtbase extension.
 
 ==== `msettn` instruction
 
@@ -397,7 +415,7 @@ is not configured, the usual `vsetvl` can be replaced with `msetmtype` and
 `msettn`; there is no need to use a dynamic branch to select between the
 two schemes.
 
-This instruction is included in the Zvmbase extension.
+This instruction is included in the Zvtbase extension.
 
 ==== `msettm` and `msettk` instructions
 
@@ -421,17 +439,17 @@ msettk rd, rs1  // rd = tk = ((mtwiden == 0) ? 0 : min(rs1, KMAX))
 
 The `msettk` instruction sets `tk` to the lesser of `rs1` and KMAX.
 
-These instructions are included in the Zvmbase extension.
+These instructions are included in the Zvtbase extension.
 
 NOTE: Unlike the `vsetvl` family of instructions, `msettn`, `msettm`, and
 `msettk` are not special-cased when `rd` and/or `rs1` is `x0`.
 
 ==== Supported SEW, TWIDEN, and KMAX values
 
-The inner dimension specified by `tk` is used to support fused
+The inner dimension specified by `tk` is used to support
 dot-product operations on narrower datatypes to increase efficiency.
 The ISA fixes maximum K values (KMAX) of matrix-multiply instructions
-according to SEW and TWIDEN to simplify ISA specification of fused
+according to SEW and TWIDEN to simplify ISA specification of these
 arithmetic operators.
 
 NOTE: Unlike other matrix accelerator architectures that support fusion of
@@ -442,23 +460,23 @@ approach allows software to use standard matrix formats.
 TEW=8
 
 SEW  TWIDEN  KMAX
- 8    1       4  (fused 4-element dot product)
+ 8    1       4  (4-element dot product)
 ----
 
 ----
 TEW=16
 
 SEW  TWIDEN  KMAX
- 8    2       4  (fused 4-element dot product)
-16    1       2  (fused 2-element dot product)
+ 8    2       4  (4-element dot product)
+16    1       2  (2-element dot product)
 ----
 
 ----
 TEW=32
 
 SEW  TWIDEN  KMAX
- 8    4       4  (fused 4-element dot product)
-16    2       2  (fused 2-element dot product)
+ 8    4       4  (4-element dot product)
+16    2       2  (2-element dot product)
 32    1       1
 ----
 
@@ -466,7 +484,7 @@ SEW  TWIDEN  KMAX
 TEW=64
 
 SEW  TWIDEN  KMAX
-16    4       2  (fused 2-element dot product)
+16    4       2  (2-element dot product)
 32    2       1
 64    1       1
 ----
@@ -502,24 +520,24 @@ taking `pattern` mod 2, and taking the index within the pattern mod ETE.
 ===  Load/Store Tile Subset to Memory
 
 These instructions transfer tile subsets between the tile state and memory.
-`vlte` and `vste` support TEW values corresponding to all
+`vtle` and `vtse` support TEW values corresponding to all
 supported SEW settings (8..ELEN).
 Implementations must provide vector loads and stores with EEWs corresponding
 to all supported SEW settings (8..ELEN).
-These instructions are included in the Zvmbase extension.
+These instructions are included in the Zvtbase extension.
 
 ----
 // Load tile subset from memory, using TEW=EEW
-vlte8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vlte64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtle64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
 // Store tile subset to memory, using TEW=EEW
-vste8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
-vste64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse8  rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse16 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse32 rs2, (rs1) // rs1 is memory address, rs2 is TSS
+vtse64 rs2, (rs1) // rs1 is memory address, rs2 is TSS
 
 ----
 
@@ -568,8 +586,17 @@ The matrix extension follows the precise exception model of the vector
 extension, allowing memory to be updated past the element indicated by
 `vstart` on a trap.
 
-Misaligned element addresses are handled the same as for unit-stride vector
-loads and stores.
+Misaligned element addresses raise either a load/store address-misaligned
+exception or a load/store access-fault exception.
+
+NOTE: The vector extensions allow element addresses to be misaligned to
+facilitate automatic vectorization of existing scalar code that might use
+misaligned addresses.
+In contrast, software written for the Zvt extensions is new software, for
+which the standard ABIs require natural alignment.
+Disallowing misaligned accesses is therefore unlikely to cause
+incompatibilities, and doing so has the benefit of simplifying implementations
+and detecting programming errors.
 
 === Move Tile Subset between Tile State and Vector Registers
 
@@ -577,7 +604,7 @@ Tile subset operations transfer elements between a tile and a vector
 register group.
 These instructions support TEW values corresponding to all
 supported SEW settings (8..ELEN).
-These instructions are included in the Zvmbase extension.
+These instructions are included in the Zvtbase extension.
 
 ----
 // Move tile subset to vector register group, using TEW=SEW
@@ -607,30 +634,44 @@ Unsupported `vtype` or `mtype` settings are reserved.
 An illegal-instruction exception is raised if `vstart` is nonzero.
 
 ----
-vtype holds SEW; mtype holds TWIDEN
-vs2 specifies A vector register group
-vs1 specifies B vector register group
-mtd is C destination tile specifier
+# vtype holds SEW and altfmt; mtype holds TWIDEN
+# vs2 specifies A vector register group
+# vs1 specifies B vector register group
+# mtd is C destination tile specifier
 
-# IEEE FP defined for:  SEW TWIDEN ALTFMT
-#                        16     2      0 FP16 (Zvm32a16f)
-#                        16     2      1 BF16 (Zvm32a16f)
-#                        32     1      0 FP32 (Zvm32a32f)
-#                        64     1      0 FP64 (Zvm64a64f)
-#
-mm.f.f mtd, vs2, vs1 # IEEE FP matmuls (FP16/BF16, FP32, FP64)
+# datatype of vs2 is supplied by opcode, SEW
+# datatype of vs1 is supplied by altfmt, SEW
+# datatype of mtd is supplied by opcode, SEW, TWIDEN
 
-# OCP FP8 defined for SEW=8 TWIDEN=4, accumulate into FP32
-mm.e5m2.e5m2 mtd, vs2, vs1 # vs2=E5M2, vs1=E5M2 (Zvm32a8f)
-mm.e5m2.e4m3 mtd, vs2, vs1 # vs2=E5M2, vs1=E4M3 (Zvm32a8f)
-mm.e4m3.e5m2 mtd, vs2, vs1 # vs2=E4M3, vs1=E5M2 (Zvm32a8f)
-mm.e4m3.e4m3 mtd, vs2, vs1 # vs2=E4M3, vs1=E4M3 (Zvm32a8f)
 
-# INT8 defined for SEW=8 TWIDEN=4, accumulate into INT32
-mm.u.u mtd, vs2, vs1   # unsigned vs2(A) unsigned vs1(B) (Zvm32a8i)
-mm.s.u mtd, vs2, vs1   # signed vs2(A) unsigned vs1(B)   (Zvm32a8i)
-mm.u.s mtd, vs2, vs1   # unsigned vs2(A) signed vs1(B)   (Zvm32a8i)
-mm.s.s mtd, vs2, vs1   # signed vs2(A) signed vs1(B)     (Zvm32a8i)
+# FP Matmuls (OCP, BF16, IEEE)
+
+# SEW  TWIDEN  altfmt    vs2   vs1   mtd
+#   8      4       0    E4M3  E4M3  FP32 (Zvtofp8fmm)
+#   8      4       1    E4M3  E5M2  FP32 (Zvtofp8fmm)
+#  16      2       0    FP16  FP16  FP32 (Zvtfp16fmm)
+#  32      1       0    FP32  FP32  FP32 (Zvtfmm)
+#  64      1       0    FP64  FP64  FP64 (Zvtdmm)
+vtfmm.tvv     mtd, vs2, vs1
+
+# SEW  TWIDEN  altfmt    vs2   vs1   mtd
+#   8      4       0    E5M2  E4M3  FP32 (Zvtofp8fmm)
+#   8      4       1    E5M2  E5M2  FP32 (Zvtofp8fmm)
+#  16      2       1    BF16  BF16  FP32 (Zvtbf16fmm)
+vtfmm.alt.tvv mtd, vs2, vs1
+
+
+# Integer Matmuls
+
+# SEW  TWIDEN  altfmt    vs2   vs1   mtd
+#   8      4       0   uint8 uint8 int32 (Zvti8i32mm)
+#   8      4       1   uint8  int8 int32 (Zvti8i32mm)
+vtmmu.tvv mtd, vs2, vs1
+
+# SEW  TWIDEN  altfmt   vs2   vs1    mtd
+#   8      4       0   int8 uint8  int32 (Zvti8i32mm)
+#   8      4       1   int8  int8  int32 (Zvti8i32mm)
+vtmms.tvv mtd, vs2, vs1
 ----
 
 NOTE: There are numerous FP8 formats being developed and standardized,
@@ -654,35 +695,28 @@ updated by the results of floating-point matrix operations.  The
 inexact, underflow, and divide-by-zero flags are not updated,
 nor is the fixed-point saturation flag.
 
+For SEW {le} 16, floating-point products are bulk-normalized
+accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd,
+according to the
+https://github.com/riscv/riscv-isa-manual/blob/03c4abb8b4b276938c3fd96e3eb53c5840e3c24b/src/zvdota.adoc#risc-v-bulk-normalization-algorithm[RVBNA Algoirhtm].
+Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
+rounding mode specified by `frm`.
+
 For SEW {ge} 32, floating-point products are computed in IEEE 754 arithmetic
 then rounded to a TEW-bit value, using the rounding mode specified by `frm`.
 They are then added to the accumulator in IEEE 754 arithmetic, using the same
 rounding mode.
 
-For SEW {le} 16, floating-point products are bulk-normalized, rounded to odd,
-accumulated in fixed-point arithmetic, then converted to FP32, rounding to odd.
-Finally, they are added to the accumulator in IEEE 754 arithmetic, using the
-rounding mode specified by `frm`.
+NOTE: Rounding the product before accumulating facilitates datapath sharing
+with the SEW {le} 16 operations.
+It also reduces power, area, and back-to-back accumulation latency as compared
+to a fused multiply-adder, even if the FMA is cascaded to optimize this case.
+Future extensions can define fused multiply-accumulate instructions.
 
-If the Zvm32a16f extension is implemented, the implementation must support
-`altfmt`=1 when SEW=16 (indicating BF16).
-Selecting `altfmt`=1 for other SEW settings is reserved.
-
-==== FP4 Matrix Arithmetic
-
-Support for 4-bit floating-point operands is provided through packed matrix
-multiply instructions with SEW=8.
-
-----
-p2mm.f.f mtd, vs2, vs1   # OCP MX FP4, accumulate into FP32 (Zvm32a4f)
-----
-
-Each 8-bit input element is divided into two 4-bit fields.  The
-`p2mm.f.f` instruction treats `tm`, `tn`, and `tk` values as defining the
-same 8-bit operand fields and 32-bit accumulators as for a regular
-SEW=8 matrix multiply instruction, except that each 8-bit multiply
-between two elements is replaced with a two-element dot product of two
-2x4-bit vectors.
+If the Zvtbf16fmm extension is implemented, the implementation must support
+selecting `altfmt`=1 when SEW=16.
+Similarly, if the Zvti8i32mm or Zvtofp8fmm extension is implemented, the
+implementation must support selecting `altfmt`=1 when SEW=8.
 
 ==== Matrix Arithmetic Instruction Encoding
 
@@ -700,40 +734,30 @@ nonzero, the instruction is reserved.
 ----
 31   26 25 24  20 19  15 14 12  1110 9 8 7 6     0
  funct6 vm   vs2    vs1  funct3     rd      opcode
- 111100  1   vs2    vs1    001   t t t 0 0  1110111 // mm.f.f
+ 111100  1   vs2    vs1    001   t t t 0 0  1110111 // vtfmm.tvv
+ 111100  1   vs2    vs1    001   t t t 0 1  1110111 // vtfmm.alt.tvv
 
- 111100  1   vs2    vs1    001   t t t 0 1  1110111 // p2mm.f.f
-
- 11111a  1   vs2    vs1    001   t t 0 0 b  1110111 // mm.<a>.<b>
-
-Encoding of a/b fields
-0 e5m2
-1 e4m3
-
- 11110a  1   vs2    vs1    000   t t 0 0 b  1110111 // mm.<a>.<b>
-
-Encoding of a/b fields
-0 unsigned
-1 signed
+ 111100  1   vs2    vs1    000   t t t 0 0  1110111 // vtmmu.tvv
+ 111100  1   vs2    vs1    000   t t t 0 1  1110111 // vtmms.tvv
 ----
 
 === Matrix Tile-Zero Instruction
 
-The `vtzero.t` instruction writes 0 to each element of the `tm` by `tn`
+The `vtzero` instruction writes 0 to each element of the `tm` by `tn`
 submatrix of the destination tile.
 Any tile elements outside the range [0, tm-1] x [0, tn-1] are
 considered part of the tail and are handled using a tail-agnostic
 policy.
-`vtzero.t` supports TEW values corresponding to all
+`vtzero` supports TEW values corresponding to all
 supported SEW settings (8..ELEN).
-This instruction is included in the Zvmbase extension.
+This instruction is included in the Zvtbase extension.
 
 ----
 # Write zeros to tile
-vtzero.t mtd
+vtzero mtd
 
 31   26 25 24  20 19  15 14 12  1110 9 8 7 6     0
- 010000  1  11110  00000   110   t t t t 0  1010111 // vtzero.t
+ 010000  1  11110  00000   110   t t t t 0  1010111 // vtzero
 ----
 
 === Context Status
@@ -745,9 +769,9 @@ As described below, additional `MS` context-status fields are added to reduce
 the cost of saving and restoring the tile state.
 These fields do not affect accessibility of the `mtype` CSR.
 
-==== Zvm Context Status in `mstatus`
+==== Zvt Context Status in `mstatus`
 
-A Zvm context status field, `MS`, is added to `mstatus[30:29]` and shadowed
+A Zvt context status field, `MS`, is added to `mstatus[30:29]` and shadowed
 in `sstatus[30:29]`.  It is defined analogously to the floating-point context
 status field, `FS`.
 
@@ -763,9 +787,9 @@ at any time, even when there is no change in tile state.
 If `mstatus`.MS is Dirty, `mstatus`.SD is 1;
 otherwise, `mstatus`.SD is set in accordance with existing specifications.
 
-==== Zvm Context Status in `vsstatus`
+==== Zvt Context Status in `vsstatus`
 
-When the hypervisor extension is present, a Zvm context status field, `MS`,
+When the hypervisor extension is present, a Zvt context status field, `MS`,
 is added to `vsstatus[30:29]`.
 It is defined analogously to the floating-point context status field, `FS`.
 
@@ -785,14 +809,14 @@ otherwise, `vsstatus`.SD is set in accordance with existing specifications.
 If `mstatus`.MS is Dirty, `mstatus`.SD is 1;
 otherwise, `mstatus`.SD is set in accordance with existing specifications.
 
-For the purposes of the `mstatus`.VS and `vsstatus`.VS fields, all Zvm
+For the purposes of the `mstatus`.VS and `vsstatus`.VS fields, all Zvt
 instructions (including configuration instructions) are considered to modify
 vector state.
-For the purposes of the `mstatus`.FS and `vsstatus`.FS fields, the Zvm
+For the purposes of the `mstatus`.FS and `vsstatus`.FS fields, the Zvt
 instructions that implicitly access `fcsr` are considered to modify
 floating-point state.
 
-==== Zvm Context Discard Instruction
+==== Zvt Context Discard Instruction
 
 ----
 31   26 25 24  20 19  15 14 12  11   7 6     0
@@ -805,7 +829,7 @@ the tile state is no longer useful and need not be saved.  `vtdiscard`
 raises an illegal-instruction exception if `mstatus`.MS=Off (or if V=1
 and `vsstatus`.MS=Off).  Otherwise, it changes `mstatus`.MS to Initial
 (and, if V=1, changes `vsstatus`.MS to Initial).
-This instruction is included in the Zvmbase extension.
+This instruction is included in the Zvtbase extension.
 
 `vtdiscard` raises an illegal-instruction exception if `vtype`.vill=1, but
 does not raise an exception as a result of `mtype`.`mtwiden` being zero.
