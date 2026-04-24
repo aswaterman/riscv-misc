@@ -92,10 +92,18 @@ efficient transpose of matrices of those datatypes using the tile storage.
 
 === Matrix Tile State
 
-The new matrix state is organized into _tiles_, where a tile is a
+The new matrix state is organized into _matrix tiles_, where a matrix tile is a
 separately addressable two-dimensional square matrix.  The
 fixed matrix state is viewed as a different number of tiles, depending
 on TEW.
+
+[NOTE]
+====
+For brevity, we use the term _tile_ as shorthand for matrix tile.
+We considered instead naming these tiles _accumulator tiles_, but
+chose not to do so because they are used for other purposes, including
+matrix transposition.
+====
 
 The ISA is optimized for the case where TEW=32, as this is the most
 common accumulator size.  When TEW=32, the tiles have dimensions TExTE
